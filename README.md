@@ -6,8 +6,21 @@ supports parallelized populations of learners where parameters and hyperparamete
 ## Prerequisites
 
 * Golang 1.13.8
+* GNU Make 4.2.1
 
 Install modules
 ```bash
 go mod download
 ```
+
+### Verify projects makes successfully
+```
+make
+```
+
+### Run the tests
+
+```bash
+make tests
+```
+
