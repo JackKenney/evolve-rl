@@ -4,8 +4,8 @@
 package main
 
 import (
-	"github.com/evolve-rl/internal"
 	"github.com/google/wire"
+	"github.com/jackkenney/evolve-rl/internal"
 )
 
 // "github.com/google/wire"
