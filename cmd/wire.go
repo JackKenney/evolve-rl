@@ -4,10 +4,13 @@
 package main
 
 import (
-	// "github.com/google/wire"
+	"github.com/evolve-rl/internal"
+	"github.com/google/wire"
 )
 
-// func InjectServer() (*api.Server, error) {
-// 	wire.Build(api.DefaultProviderSet)
-// 	return &api.Server{}, nil
-// }
+// "github.com/google/wire"
+
+func InjectDriver() (*internal.Driver, error) {
+	wire.Build(internal.DefaultProviderSet)
+	return &internal.Driver{}, nil
+}

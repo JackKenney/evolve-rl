@@ -24,4 +24,4 @@ func (m *MockModel) Predict(data interface{}) (interface{}, error) {
 // and any errors that occurred during training
 func (m *MockModel) Train(data interface{}) (interface{}, error) {
 	return nil, nil
-}
+} 
