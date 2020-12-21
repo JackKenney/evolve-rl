@@ -5,7 +5,7 @@ supports parallelized populations of learners where parameters and hyperparamete
 
 ## Prerequisites
 
-* Golang 1.13.8
+* Golang (version in `go.mod` file)
 * GNU Make 4.2.1
 
 Install modules
@@ -24,3 +24,6 @@ make
 make tests
 ```
 
+## Acknowledgements
+
+Translated and modified from Phil Thomas's COMPSCI 687 at UMass CICS.
