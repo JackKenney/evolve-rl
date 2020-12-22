@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 
@@ -40,8 +39,7 @@ func TestTAS(t *testing.T) {
 	grid = NewGridworld(rng).(*Gridworld)
 	grid.x = 4
 	grid.y = 4
-	r := grid.Transition(0, rng)
-	fmt.Println(r)
+	grid.Transition(0, rng)
 	assert.Equal(t, 1, grid.t, "time did not increment")
 	assert.True(t, grid.tas, "grid.tas not correct")
 	assert.True(t, grid.InTAS(), "InTAS does not work")

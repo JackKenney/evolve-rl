@@ -39,9 +39,6 @@ func runAgentEnvironment(
 
 		// Loop over time
 		for t := 0; true; t++ {
-			if t <= 100 {
-				fmt.Printf(strconv.FormatInt(int64(t), 10) + " ")
-			}
 			reward = env.Transition(curAction, rng) // Update the state of the environment and get the reward
 			result[epCount] += curGamma * reward    // Update the return for this episode
 			curGamma *= gamma                       // Decay curGamma
