@@ -79,8 +79,6 @@ func runAgentEnvironment(
 	}
 	wg.Wait()
 
-	fmt.Println(result)
-
 	// Return the "result" variable, holding the returns from each episode.
 	return result
 }
