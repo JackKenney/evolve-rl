@@ -14,7 +14,7 @@ func runEpisode(
 	agt internal.Agent, // The agent to run. The * here means that this is a pointer to an agent object. "pointer" means "memory location". So, this function takes as input the location of an object in memory, and that object satisfies the spceifications of the "Agent" class.
 	env internal.Environment, // The environment to run on (pointer)
 	gamma float64, // The discount factor to use
-	rng *mathlib.Random) float64 { // Random number rng to use.
+	rng *mathlib.Random) float64 { // Random number rng to use
 
 	// Tell the agent and environment that we're starting a new episode. For the first episode, this may be redundant if the agent and environment were just created
 	env.NewEpisode(rng)
@@ -68,16 +68,10 @@ func runAgentEnvironment(
 	agt.Reset(rng)
 
 	result := make([]float64, maxEps)
-	var wg sync.WaitGroup
 	// Loop over episodes
 	for epCount := 0; epCount < maxEps; epCount++ {
-		wg.Add(1)
-		go func(i int) {
-			result[i] = runEpisode(agt.DeepCopy(), env.DeepCopy(rng), gamma, rng)
-			wg.Done()
-		}(epCount)
+		result[epCount] = runEpisode(agt, env, gamma, rng)
 	}
-	wg.Wait()
 
 	// Return the "result" variable, holding the returns from each episode.
 	return result
@@ -104,10 +98,13 @@ func main() {
 	// a1 := internal.REINFORCE(stateDim, numActions, gamma) //  REINFORCE doesn't take N, since it will always use N = 1.
 	a2 := internal.NewTabularBBO(stateDim, numActions, gamma, N, maxEps)
 
-	// returnsA1 := mathlib.Matrix(numTrials, maxEps, 0) // Create a matrix to store the resulting returns. results(i,j) = the return on the j'th episode of the i'th trial.
-	returnsA2 := mathlib.Matrix(numTrials, maxEps, 0) // Same as above, but for the second agent
-	fmt.Println("Starting trial 1 of ", numTrials+1)  // "cout" means "console out", and is our print command. Separate objects to print with the << symbol. Here we are printing a string, followed by an integer, followed by std::endl (end line).
-	for trial := 0; trial < numTrials; trial++ {      // Loop over trials
+	// var returnsA1 = mathlib.Matrix(numTrials, maxEps, 0) // Create a matrix to store the resulting returns. results(i,j) = the return on the j'th episode of the i'th trial.
+	var returnsA2 = mathlib.Matrix(numTrials, maxEps, 0) // Same as above, but for the second agent
+
+	fmt.Println("Starting trial 1 of ", numTrials+1) // "cout" means "console out", and is our print command. Separate objects to print with the << symbol. Here we are printing a string, followed by an integer, followed by std::endl (end line).
+
+	var wg sync.WaitGroup
+	for trial := 0; trial < numTrials; trial++ { // Loop over trials
 		if (trial+1)%1 == 0 { // % means "mod"
 			fmt.Println("Starting trial ", trial+1, " of ", numTrials)
 		}
@@ -116,8 +113,13 @@ func main() {
 		// won't know the type of the agent and environment, only that they meet the specifications of Agent.hpp and Environment.hpp.
 		// So, on their end, these inputs are pointers to objects of unknown exact type, but which meet the Agent/Environment specifications.
 		// returnsA1[trial] = runAgentEnvironment(&a1, &env, maxEps, gamma, a1.updateBeforeNextAction(), rng).transpose()
-		returnsA2[trial] = runAgentEnvironment(a2, env, maxEps, gamma, rng)
+		wg.Add(1)
+		go func(i int) {
+			returnsA2[i] = runAgentEnvironment(a2, env, maxEps, gamma, rng)
+			wg.Done()
+		}(trial)
 	}
+	wg.Wait()
 
 	// Convert returns into a vector of mean returns and the standard error (used for error bars)
 	// meanReturnsA1 := mathlib.Vector(maxEps)
