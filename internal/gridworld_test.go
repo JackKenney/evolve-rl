@@ -9,13 +9,13 @@ import (
 )
 
 var (
-	grid Gridworld
+	grid *Gridworld
 )
 
 func init() {
 	source = rand.NewSource(0)
 	rng = rand.New(source)
-	grid = NewGridworld(rng).(Gridworld)
+	grid = NewGridworld(rng).(*Gridworld)
 }
 
 func TestConstructor(t *testing.T) {
@@ -37,7 +37,7 @@ func TestTransition(t *testing.T) {
 	assert.True(t, b)
 }
 func TestTAS(t *testing.T) {
-	grid = NewGridworld(rng).(Gridworld)
+	grid = NewGridworld(rng).(*Gridworld)
 	grid.x = 4
 	grid.y = 4
 	r := grid.Transition(0, rng)

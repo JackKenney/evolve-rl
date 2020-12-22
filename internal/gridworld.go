@@ -17,31 +17,31 @@ type Gridworld struct {
 func NewGridworld(rng *rand.Rand) Environment {
 	env := Gridworld{}
 	env.NewEpisode(rng)
-	return env
+	return &env
 }
 
 // GetMaxEps returns how many episodes should be run
-func (env Gridworld) GetMaxEps() int {
+func (env *Gridworld) GetMaxEps() int {
 	return 1000
 }
 
 // GetStateDim returns the dimension (length) of state vectors.
-func (env Gridworld) GetStateDim() int {
+func (env *Gridworld) GetStateDim() int {
 	return 23
 }
 
 // GetNumActions returns |\mathcal A|. Note that we are assuming that the action set is finite.
-func (env Gridworld) GetNumActions() int {
+func (env *Gridworld) GetNumActions() int {
 	return 4
 }
 
 // GetGamma returns \gamma
-func (env Gridworld) GetGamma() float64 {
+func (env *Gridworld) GetGamma() float64 {
 	return 0.9
 }
 
 // Transition applies action a, updating the state of the environment. It returns the reward that results from the state transition.
-func (env Gridworld) Transition(a int, r *rand.Rand) float64 {
+func (env *Gridworld) Transition(a int, r *rand.Rand) float64 {
 	// Count the next timestep
 	env.t++
 
@@ -110,7 +110,7 @@ func (env Gridworld) Transition(a int, r *rand.Rand) float64 {
 }
 
 // GetState returns the current state of the environment
-func (env Gridworld) GetState() []float64 {
+func (env *Gridworld) GetState() []float64 {
 	// Check if we should transition to s_infty.
 	if env.x == 4 && env.y == 4 {
 		env.tas = true
@@ -141,12 +141,12 @@ func (env Gridworld) GetState() []float64 {
 }
 
 // InTAS returns whether the current state is Terminal Absorbing State (TAS)
-func (env Gridworld) InTAS() bool {
+func (env *Gridworld) InTAS() bool {
 	return env.tas
 }
 
 // NewEpisode resets the environment to start a new episode (it samples the state from the initial state distribution).
-func (env Gridworld) NewEpisode(rng *rand.Rand) {
+func (env *Gridworld) NewEpisode(rng *rand.Rand) {
 	// Start at position (0,0), with the time counter also equal to zero
 	env.x = 0
 	env.y = 0

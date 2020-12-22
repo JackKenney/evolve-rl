@@ -8,8 +8,6 @@ import (
 type Agent interface {
 	// UpdateBeforeNextAction makes an update to the agent's policy before selecting the next action.
 	UpdateBeforeNextAction() bool
-	// EpisodicAgent returns whether the agent makes end of episode updates
-	EpisodicAgent() bool
 	// GetAction returns the action that the agent selects from the state.
 	GetAction(s []float64, rng *rand.Rand) int
 	// NewEpisode tells the agent that it is at the start of a new episode.

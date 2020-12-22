@@ -50,21 +50,21 @@ func NewTabularBBO(stateDim int, numActions int, gamma float64, N int, maxEps in
 	bbo.newTheta = mathlib.Matrix(bbo.numStates, bbo.numActions, initialValue)
 	bbo.curTheta = mathlib.Matrix(bbo.numStates, bbo.numActions, initialValue)
 
-	return bbo
+	return &bbo
 }
 
 // UpdateBeforeNextAction makes an update to the agent's policy before selecting the next action.
-func (bbo TabularBBO) UpdateBeforeNextAction() bool {
+func (bbo *TabularBBO) UpdateBeforeNextAction() bool {
 	return false
 }
 
 // EpisodicAgent returns whether the agent makes end of episode updates
-func (bbo TabularBBO) EpisodicAgent() bool {
+func (bbo *TabularBBO) EpisodicAgent() bool {
 	return true
 }
 
 // GetAction returns the action that the agent selects from the state.
-func (bbo TabularBBO) GetAction(s []float64, rng *rand.Rand) int {
+func (bbo *TabularBBO) GetAction(s []float64, rng *rand.Rand) int {
 	fmt.Println("GetAction", bbo.t)
 	// Convert the one-hot state into an integer from 0 - (numStates-1)
 	state := 0
@@ -99,23 +99,23 @@ func (bbo TabularBBO) GetAction(s []float64, rng *rand.Rand) int {
 }
 
 // NewEpisode tells the agent that it is at the start of a new episode.
-func (bbo TabularBBO) NewEpisode() {}
+func (bbo *TabularBBO) NewEpisode() {}
 
 // Reset the agent entirely - to a blank slate prior to learning
-func (bbo TabularBBO) Reset(rng *rand.Rand) {
+func (bbo *TabularBBO) Reset(rng *rand.Rand) {
 	fmt.Println("Reset")
 	bbo.epCount = 0
 	bbo.wipeStatesActionsRewards()
 }
 
 // UpdateSARS is unimplemented for this class.
-func (bbo TabularBBO) UpdateSARS(s []float64, a int, r float64, sPrime []float64, rng *rand.Rand) {
+func (bbo *TabularBBO) UpdateSARS(s []float64, a int, r float64, sPrime []float64, rng *rand.Rand) {
 	// Shouldn't be using this function
 	panic("UpdateSARS is not implemented for TabularBBO.")
 }
 
 // UpdateSARSA - given a (s,a,r,s',a') tuple
-func (bbo TabularBBO) UpdateSARSA(s []float64, a int, r float64, sPrime []float64, aPrime int, rng *rand.Rand) {
+func (bbo *TabularBBO) UpdateSARSA(s []float64, a int, r float64, sPrime []float64, aPrime int, rng *rand.Rand) {
 	fmt.Println("UpdateSARSA", bbo.t)
 	// Increment timeline
 	bbo.t++
@@ -126,7 +126,7 @@ func (bbo TabularBBO) UpdateSARSA(s []float64, a int, r float64, sPrime []float6
 }
 
 // LastUpdate lets the agent update/learn when sPrime would be the terminal absorbing state.
-func (bbo TabularBBO) LastUpdate(s []float64, a int, r float64, rng *rand.Rand) {
+func (bbo *TabularBBO) LastUpdate(s []float64, a int, r float64, rng *rand.Rand) {
 	fmt.Println("LastUpdate")
 	// Update logs
 	bbo.states[bbo.epCount][bbo.t] = mathlib.FromOneHot(s)
@@ -148,7 +148,7 @@ func (bbo TabularBBO) LastUpdate(s []float64, a int, r float64, rng *rand.Rand) 
 }
 
 // EpisodicUpdate the agent after N episodes (specified in constructor)
-func (bbo TabularBBO) episodicUpdate(rng *rand.Rand) {
+func (bbo *TabularBBO) episodicUpdate(rng *rand.Rand) {
 	// We are going to compute newThetaJHat (an estimate of how good the new policy is), and will then
 	// see if it is better than the best policy we found so far.
 	bbo.newThetaJHat = 0
@@ -182,7 +182,7 @@ func (bbo TabularBBO) episodicUpdate(rng *rand.Rand) {
 }
 
 // Clear agent's memory
-func (bbo TabularBBO) wipeStatesActionsRewards() {
+func (bbo *TabularBBO) wipeStatesActionsRewards() {
 	for i := 0; i < bbo.N; i++ {
 		bbo.states[i] = make([]int, bbo.maxEps)
 		bbo.actions[i] = make([]int, bbo.maxEps)
