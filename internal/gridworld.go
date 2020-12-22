@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"math/rand"
 )
 
@@ -53,7 +52,6 @@ func (env *Gridworld) Transition(a int, r *rand.Rand) float64 {
 
 	// Check if we should terminate due to running too long
 	if env.t == 100 {
-		fmt.Print("Terminating")
 		env.tas = true
 		return -100.0
 	}

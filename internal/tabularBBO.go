@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 
@@ -65,7 +64,6 @@ func (bbo *TabularBBO) EpisodicAgent() bool {
 
 // GetAction returns the action that the agent selects from the state.
 func (bbo *TabularBBO) GetAction(s []float64, rng *rand.Rand) int {
-	fmt.Println("GetAction", bbo.t)
 	// Convert the one-hot state into an integer from 0 - (numStates-1)
 	state := 0
 	for state = 0; state < len(s); state++ {
@@ -103,7 +101,6 @@ func (bbo *TabularBBO) NewEpisode() {}
 
 // Reset the agent entirely - to a blank slate prior to learning
 func (bbo *TabularBBO) Reset(rng *rand.Rand) {
-	fmt.Println("Reset")
 	bbo.epCount = 0
 	bbo.wipeStatesActionsRewards()
 }
@@ -116,7 +113,6 @@ func (bbo *TabularBBO) UpdateSARS(s []float64, a int, r float64, sPrime []float6
 
 // UpdateSARSA - given a (s,a,r,s',a') tuple
 func (bbo *TabularBBO) UpdateSARSA(s []float64, a int, r float64, sPrime []float64, aPrime int, rng *rand.Rand) {
-	fmt.Println("UpdateSARSA", bbo.t)
 	// Increment timeline
 	bbo.t++
 	// Update logs
@@ -127,7 +123,6 @@ func (bbo *TabularBBO) UpdateSARSA(s []float64, a int, r float64, sPrime []float
 
 // LastUpdate lets the agent update/learn when sPrime would be the terminal absorbing state.
 func (bbo *TabularBBO) LastUpdate(s []float64, a int, r float64, rng *rand.Rand) {
-	fmt.Println("LastUpdate")
 	// Update logs
 	bbo.states[bbo.epCount][bbo.t] = mathlib.FromOneHot(s)
 	bbo.actions[bbo.epCount][bbo.t] = a

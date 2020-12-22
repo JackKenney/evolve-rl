@@ -28,11 +28,14 @@ func TestGetAction(t *testing.T) {
 	assert.True(t, a == -1 || a == 0 || a == 1 || a == 2 || a == 3)
 }
 
-// func TestUpdateSARSA(t *testing.T) {
-// 	s := env.GetState()
-// 	a := agt.GetAction(s, rng)
-// 	r := env.Transition(a, rng)
-// 	sp := env.GetState()
-// 	ap := agt.GetAction(sp, rng)
-// 	agt.UpdateSARSA(s, a, r, sp, ap, rng)
-// }
+func TestUpdateSARSA(t *testing.T) {
+	s := env.GetState()
+	a := agt.GetAction(s, rng)
+	r := env.Transition(a, rng)
+	sp := env.GetState()
+	ap := agt.GetAction(sp, rng)
+	oldT := agt.(*TabularBBO).t
+	agt.UpdateSARSA(s, a, r, sp, ap, rng)
+	newT := agt.(*TabularBBO).t
+	assert.NotEqual(t, oldT, newT, "time did not update")
+}
