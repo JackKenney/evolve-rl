@@ -8,6 +8,8 @@ import (
 type Agent interface {
 	// UpdateBeforeNextAction makes an update to the agent's policy before selecting the next action.
 	UpdateBeforeNextAction() bool
+	// EpisodicAgent returns whether the agent makes end of episode updates
+	EpisodicAgent() bool
 	// GetAction returns the action that the agent selects from the state.
 	GetAction(s []float64, rng *rand.Rand) int
 	// NewEpisode tells the agent that it is at the start of a new episode.
@@ -20,4 +22,8 @@ type Agent interface {
 	UpdateSARSA(s []float64, a int, r float64, sPrime []float64, aPrime int, rng *rand.Rand)
 	// LastUpdate lets the agent update/learn when sPrime would be the terminal absorbing state.
 	LastUpdate(s []float64, a int, r float64, rng *rand.Rand)
+	// // EpisodicUpdate the agent after N episodes (specified in constructor)
+	// episodicUpdate(rng *rand.Rand)
+	// // Clear agent's memory
+	// wipeStatesActionsRewards()
 }

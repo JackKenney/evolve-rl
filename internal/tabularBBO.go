@@ -3,14 +3,17 @@ package internal
 import (
 	"math"
 	"math/rand"
+
+	"github.com/jackkenney/evolve-rl/internal/mathlib"
 )
 
 // TabularBBO learning agent using black box optimization
 type TabularBBO struct {
-	N       int           // How many episodes before update?
-	states  [][][]float64 // States history
-	actions [][]int       // Action history
-	rewards [][]float64   // Rewards history
+	N       int // How many episodes before update?
+	t       int
+	states  [][]int     // States history
+	actions [][]int     // Action history
+	rewards [][]float64 // Rewards history
 
 	numStates  int     // How many discrete states?
 	numActions int     // How many discrete actions?
@@ -25,24 +28,27 @@ type TabularBBO struct {
 }
 
 // NewTabularBBO returns an initialized TabularBBO object.
-func NewTabularBBO(stateDim int, numActions int, gamma float64, N int, maxEps int) EpisodicAgent {
+func NewTabularBBO(stateDim int, numActions int, gamma float64, N int, maxEps int) Agent {
 	agt := TabularBBO{}
 	agt.numStates = stateDim
 	agt.newTheta = make([][]float64, agt.numStates)
 	agt.curTheta = make([][]float64, agt.numStates)
 
 	initialValue := 10.0
-	for i := 0; i < agt.numStates; i++ {
-		for j := 0; j < agt.numActions; j++ {
-			agt.newTheta[i][j] = initialValue
-			agt.curTheta[i][j] = initialValue
-		}
-	}
+	// mathlib := MathUtils{}
+	agt.newTheta = mathlib.Matrix(agt.numStates, agt.numActions, initialValue)
+	agt.curTheta = mathlib.Matrix(agt.numStates, agt.numActions, initialValue)
+
 	return agt
 }
 
 // UpdateBeforeNextAction makes an update to the agent's policy before selecting the next action.
 func (bbo TabularBBO) UpdateBeforeNextAction() bool {
+	return false
+}
+
+// EpisodicAgent returns whether the agent makes end of episode updates
+func (bbo TabularBBO) EpisodicAgent() bool {
 	return true
 }
 
@@ -91,38 +97,41 @@ func (bbo TabularBBO) Reset(rng *rand.Rand) {
 
 // UpdateSARS is unimplemented for this class.
 func (bbo TabularBBO) UpdateSARS(s []float64, a int, r float64, sPrime []float64, rng *rand.Rand) {
-	if bbo.UpdateBeforeNextAction() {
-		panic("UpdateSARS is not implemented for TabularBBO.")
-	}
+	panic("UpdateSARS is not implemented for TabularBBO.")
 }
 
 // UpdateSARSA - given a (s,a,r,s',a') tuple
 func (bbo TabularBBO) UpdateSARSA(s []float64, a int, r float64, sPrime []float64, aPrime int, rng *rand.Rand) {
-	bbo.states[bbo.epCount] = append(bbo.states[bbo.epCount], s)
-	bbo.actions[bbo.epCount] = append(bbo.actions[bbo.epCount], a)
-	bbo.rewards[bbo.epCount] = append(bbo.rewards[bbo.epCount], r)
+	bbo.states[bbo.epCount] = mathlib.FromOneHot(s)
+	bbo.actions[bbo.epCount][bbo.t] = a
+	bbo.rewards[bbo.epCount][bbo.t] = r
+	// Increment timeline
+	bbo.t++
 }
 
 // LastUpdate lets the agent update/learn when sPrime would be the terminal absorbing state.
 func (bbo TabularBBO) LastUpdate(s []float64, a int, r float64, rng *rand.Rand) {
-	bbo.states[bbo.epCount] = append(bbo.states[bbo.epCount], s)
-	bbo.actions[bbo.epCount] = append(bbo.actions[bbo.epCount], a)
-	bbo.rewards[bbo.epCount] = append(bbo.rewards[bbo.epCount], r)
+	bbo.states[bbo.epCount] = mathlib.FromOneHot(s)
+	bbo.actions[bbo.epCount][bbo.t] = a
+	bbo.rewards[bbo.epCount][bbo.t] = r
 
 	// Increment episode counter
 	bbo.epCount++
 
 	if bbo.epCount == bbo.N { // If ready to update, update and wipe the states, actions, and rewards
-		bbo.EpisodicUpdate(rng)
+		bbo.episodicUpdate(rng)
 		bbo.wipeStatesActionsRewards()
 		bbo.epCount = 0
 	}
+
+	// Reset the episode timeline
+	bbo.t = 0
 }
 
 // EpisodicUpdate the agent after N episodes (specified in constructor)
-func (bbo TabularBBO) EpisodicUpdate(rng *rand.Rand) {
-	// Track how many episodes have passed
-	bbo.epCount += bbo.N
+func (bbo TabularBBO) episodicUpdate(rng *rand.Rand) {
+	// // Track how many episodes have passed
+	// bbo.epCount += bbo.N
 
 	// We are going to compute newThetaJHat (an estimate of how good the new policy is), and will then
 	// see if it is better than the best policy we found so far.
@@ -159,8 +168,8 @@ func (bbo TabularBBO) EpisodicUpdate(rng *rand.Rand) {
 // Clear agent's memory
 func (bbo TabularBBO) wipeStatesActionsRewards() {
 	for i := 0; i < bbo.N; i++ {
-		bbo.states[i] = [][]float64{}
-		bbo.actions[i] = []int{}
-		bbo.rewards[i] = []float64{}
+		bbo.states[i] = make([]int, bbo.maxEps)
+		bbo.actions[i] = make([]int, bbo.maxEps)
+		bbo.rewards[i] = make([]float64, bbo.maxEps)
 	}
 }
