@@ -152,3 +152,8 @@ func (env *Gridworld) NewEpisode(rng *rand.Rand) {
 	// We do not start in the terminal absorbing state
 	env.tas = false
 }
+
+// DeepCopy returns a deep copy of the struct
+func (env *Gridworld) DeepCopy(rng *rand.Rand) Environment {
+	return NewGridworld(rng)
+}

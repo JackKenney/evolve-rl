@@ -5,11 +5,59 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
+	"sync"
 
 	"github.com/jackkenney/evolve-rl/internal"
 	"github.com/jackkenney/evolve-rl/mathlib"
 )
 
+func runEpisode(
+	agt internal.Agent, // The agent to run. The * here means that this is a pointer to an agent object. "pointer" means "memory location". So, this function takes as input the location of an object in memory, and that object satisfies the spceifications of the "Agent" class.
+	env internal.Environment, // The environment to run on (pointer)
+	gamma float64, // The discount factor to use
+	rng *rand.Rand) float64 { // Random number rng to use.
+
+	// Tell the agent and environment that we're starting a new episode. For the first episode, this may be redundant if the agent and environment were just created
+	env.NewEpisode(rng)
+	agt.NewEpisode()
+
+	// Create variables that we will use
+	var curAction, newAction int
+	var result, reward, curGamma float64
+	var curState, newState []float64
+
+	// Prepare for the new episode
+	result = 0                               // We will store the return here
+	curGamma = 1                             // We will store gamma^t here
+	curState = env.GetState()                // Get the initial state
+	curAction = agt.GetAction(curState, rng) // Get the initial action
+
+	// Loop over time
+	for t := 0; true; t++ {
+		reward = env.Transition(curAction, rng) // Update the state of the environment and get the reward
+		result += curGamma * reward             // Update the return for this episode
+		curGamma *= gamma                       // Decay curGamma
+
+		if env.InTAS() { // Check if in the terminal absorbing state
+			agt.LastUpdate(curState, curAction, reward, rng) // In the terminal absorbing state, so do a special temrinal update
+			break                                            // Break out of the loop over time.
+		}
+
+		newState = env.GetState()         // If we get here, the new state isn't the terminal absorbing state. Get the new state.
+		if agt.UpdateBeforeNextAction() { // Check if we should update before computing the next action
+			agt.UpdateSARS(curState, curAction, reward, newState, rng) // Update before getting the new action
+			newAction = agt.GetAction(newState, rng)                   // Get the new action
+		} else {
+			newAction = agt.GetAction(newState, rng)                               // Get the new action before updating the agent
+			agt.UpdateSARSA(curState, curAction, reward, newState, newAction, rng) // Update the agent
+		}
+
+		// Prepare for the next iteration of the t-loop, where "new" variables will be the "cur" variables.
+		curAction = newAction
+		curState = newState
+	}
+	return result
+}
 func runAgentEnvironment(
 	agt internal.Agent, // The agent to run. The * here means that this is a pointer to an agent object. "pointer" means "memory location". So, this function takes as input the location of an object in memory, and that object satisfies the spceifications of the "Agent" class.
 	env internal.Environment, // The environment to run on (pointer)
@@ -20,48 +68,18 @@ func runAgentEnvironment(
 	// Wipe the agent to start a new trial
 	agt.Reset(rng)
 
-	// Create variables that we will use
-	var curAction, newAction int
-	var reward, curGamma float64
-	var result, curState, newState []float64
-
+	result := make([]float64, maxEps)
+	var wg sync.WaitGroup
 	// Loop over episodes
 	for epCount := 0; epCount < maxEps; epCount++ {
-		// Tell the agent and environment that we're starting a new episode. For the first episode, this may be redundant if the agent and environment were just created
-		env.NewEpisode(rng)
-		agt.NewEpisode()
-
-		// Prepare for the new episode
-		result = append(result, 0)               // We will store the return here
-		curGamma = 1                             // We will store gamma^t here
-		curState = env.GetState()                // Get the initial state
-		curAction = agt.GetAction(curState, rng) // Get the initial action
-
-		// Loop over time
-		for t := 0; true; t++ {
-			reward = env.Transition(curAction, rng) // Update the state of the environment and get the reward
-			result[epCount] += curGamma * reward    // Update the return for this episode
-			curGamma *= gamma                       // Decay curGamma
-
-			if env.InTAS() { // Check if in the terminal absorbing state
-				agt.LastUpdate(curState, curAction, reward, rng) // In the terminal absorbing state, so do a special temrinal update
-				break                                            // Break out of the loop over time.
-			}
-
-			newState = env.GetState()         // If we get here, the new state isn't the terminal absorbing state. Get the new state.
-			if agt.UpdateBeforeNextAction() { // Check if we should update before computing the next action
-				agt.UpdateSARS(curState, curAction, reward, newState, rng) // Update before getting the new action
-				newAction = agt.GetAction(newState, rng)                   // Get the new action
-			} else {
-				newAction = agt.GetAction(newState, rng)                               // Get the new action before updating the agent
-				agt.UpdateSARSA(curState, curAction, reward, newState, newAction, rng) // Update the agent
-			}
-
-			// Prepare for the next iteration of the t-loop, where "new" variables will be the "cur" variables.
-			curAction = newAction
-			curState = newState
-		}
+		wg.Add(1)
+		go func(i int) {
+			result[i] = runEpisode(agt.DeepCopy(), env.DeepCopy(rng), gamma, rng)
+			wg.Done()
+		}(epCount)
 	}
+	wg.Wait()
+	fmt.Println(result)
 
 	// Return the "result" variable, holding the returns from each episode.
 	return result

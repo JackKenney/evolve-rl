@@ -22,4 +22,6 @@ type Environment interface {
 	InTAS() bool
 	// This function resets the environment to start a new episode (it samples the state from the initial state distribution).
 	NewEpisode(rng *rand.Rand)
+	// DeepCopy returns deep copy of struct
+	DeepCopy(rng *rand.Rand) Environment
 }

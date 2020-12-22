@@ -65,15 +65,7 @@ func (bbo *TabularBBO) EpisodicAgent() bool {
 // GetAction returns the action that the agent selects from the state.
 func (bbo *TabularBBO) GetAction(s []float64, rng *rand.Rand) int {
 	// Convert the one-hot state into an integer from 0 - (numStates-1)
-	state := 0
-	for state = 0; state < len(s); state++ {
-		if s[state] != 0 {
-			break
-		}
-	}
-	if state == len(s) { // If this happens, the s-vector was all zeros
-		panic("state vector was all zeros")
-	}
+	state := mathlib.FromOneHot(s)
 	// Get the action probabilities from theta, using softmax action selection.
 	actionProbabilities := bbo.newTheta[state]
 	denominator := 0.0
@@ -128,18 +120,18 @@ func (bbo *TabularBBO) LastUpdate(s []float64, a int, r float64, rng *rand.Rand)
 	bbo.actions[bbo.epCount][bbo.t] = a
 	bbo.rewards[bbo.epCount][bbo.t] = r
 
+	// Reset the episode timeline
+	bbo.t = 0
+
 	// Increment episode counter
 	bbo.epCount++
 
 	// If ready to update, update and wipe the states, actions, and rewards.
-	if bbo.epCount == bbo.N {
+	if bbo.epCount >= bbo.N {
 		bbo.episodicUpdate(rng)
 		bbo.wipeStatesActionsRewards()
 		bbo.epCount = 0
 	}
-
-	// Reset the episode timeline
-	bbo.t = 0
 }
 
 // EpisodicUpdate the agent after N episodes (specified in constructor)
@@ -183,4 +175,9 @@ func (bbo *TabularBBO) wipeStatesActionsRewards() {
 		bbo.actions[i] = make([]int, bbo.maxEps)
 		bbo.rewards[i] = make([]float64, bbo.maxEps)
 	}
+}
+
+// DeepCopy returns deep copy of the agent
+func (bbo *TabularBBO) DeepCopy() Agent {
+	return NewTabularBBO(bbo.numStates, bbo.numActions, bbo.gamma, bbo.N, bbo.maxEps)
 }
