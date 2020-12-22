@@ -2,6 +2,8 @@ package mathlib
 
 import (
 	"math"
+	"math/rand"
+	"sync"
 )
 
 // Vector creates a slice with initial value.
@@ -78,4 +80,26 @@ func StdError(v []float64) float64 {
 		temp += (val - sampleMean) * (val - sampleMean) // temp += foo; means the same thing as temp = temp + foo;
 	}
 	return math.Sqrt(temp/float64(len(v)-1.0)) / math.Sqrt(float64(len(v))) // Return the standard error. The returned object must match the return type in the function delaration.
+}
+
+// Random manages a concurrent-safe random number generator.
+type Random struct {
+	mu     *sync.RWMutex
+	source rand.Source
+	rng    *rand.Rand
+}
+
+// NewRandom returns a new threadsafe random number generator.
+func NewRandom(seed int64) *Random {
+	r := Random{}
+	r.source = rand.NewSource(seed)
+	r.rng = rand.New(r.source)
+	return &r
+}
+
+// Float64 generates threadsafe uniform random float from [0,1)
+func (r *Random) Float64() float64 {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.rng.Float64()
 }
