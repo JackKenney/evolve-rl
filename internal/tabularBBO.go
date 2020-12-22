@@ -26,7 +26,19 @@ type TabularBBO struct {
 
 // NewTabularBBO returns an initialized TabularBBO object.
 func NewTabularBBO(stateDim int, numActions int, gamma float64, N int, maxEps int) EpisodicAgent {
-	return TabularBBO{}
+	agt := TabularBBO{}
+	agt.numStates = stateDim
+	agt.newTheta = make([][]float64, agt.numStates)
+	agt.curTheta = make([][]float64, agt.numStates)
+
+	initialValue := 10.0
+	for i := 0; i < agt.numStates; i++ {
+		for j := 0; j < agt.numActions; j++ {
+			agt.newTheta[i][j] = initialValue
+			agt.curTheta[i][j] = initialValue
+		}
+	}
+	return agt
 }
 
 // UpdateBeforeNextAction makes an update to the agent's policy before selecting the next action.
@@ -43,8 +55,8 @@ func (bbo TabularBBO) GetAction(s []float64, rng *rand.Rand) int {
 			break
 		}
 	}
-	if state != len(s) { // If this happens, the s-vector was all zeros
-		panic("state vector was not zeros")
+	if state == len(s) { // If this happens, the s-vector was all zeros
+		panic("state vector was all zeros")
 	}
 	// Get the action probabilities from theta, using softmax action selection.
 	actionProbabilities := bbo.newTheta[state]
@@ -77,8 +89,15 @@ func (bbo TabularBBO) Reset(rng *rand.Rand) {
 	bbo.wipeStatesActionsRewards()
 }
 
-// Update given a (s,a,r,s') tuple
-func (bbo TabularBBO) Update(s []float64, a int, r float64, sPrime []float64, rng *rand.Rand) {
+// UpdateSARS is unimplemented for this class.
+func (bbo TabularBBO) UpdateSARS(s []float64, a int, r float64, sPrime []float64, rng *rand.Rand) {
+	if bbo.UpdateBeforeNextAction() {
+		panic("UpdateSARS is not implemented for TabularBBO.")
+	}
+}
+
+// UpdateSARSA - given a (s,a,r,s',a') tuple
+func (bbo TabularBBO) UpdateSARSA(s []float64, a int, r float64, sPrime []float64, aPrime int, rng *rand.Rand) {
 	bbo.states[bbo.epCount] = append(bbo.states[bbo.epCount], s)
 	bbo.actions[bbo.epCount] = append(bbo.actions[bbo.epCount], a)
 	bbo.rewards[bbo.epCount] = append(bbo.rewards[bbo.epCount], r)

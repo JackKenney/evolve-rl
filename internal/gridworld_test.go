@@ -8,10 +8,7 @@ import (
 )
 
 var (
-	source rand.Source
-	rng    *rand.Rand
-	a      assert.Assertions
-	grid   Gridworld
+	grid Gridworld
 )
 
 func init() {
@@ -30,9 +27,9 @@ func TestMaxEps(t *testing.T) {
 	assert.Equal(t, 1000, grid.GetMaxEps())
 }
 
-func TestGetAction(t *testing.T) {
-	grid.Transition(0, rng)
+func TestTransition(t *testing.T) {
+	grid.Transition(1, rng)
 	s := grid.GetState()
-	b := s[0] == 1.0 || s[1] == 1.0 || s[5] == 1.0
+	b := s[0] == 1.0 || s[1] == 1.0
 	assert.True(t, b)
 }

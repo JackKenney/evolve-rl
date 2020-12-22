@@ -14,8 +14,10 @@ type Agent interface {
 	NewEpisode()
 	// Reset the agent entirely - to a blank slate prior to learning.
 	Reset(rng *rand.Rand)
-	// Update given a (s,a,r,s') tuple.
-	Update(s []float64, a int, r float64, sPrime []float64, rng *rand.Rand)
+	// Update given a (s,a,r,s') tuple, if UpdateBeforeNextAction returns true.
+	UpdateSARS(s []float64, a int, r float64, sPrime []float64, rng *rand.Rand)
+	// Update given a (s,a,r,s',a') tuple, if UpdateBeforeNextAction returns false.
+	UpdateSARSA(s []float64, a int, r float64, sPrime []float64, aPrime int, rng *rand.Rand)
 	// LastUpdate lets the agent update/learn when sPrime would be the terminal absorbing state.
 	LastUpdate(s []float64, a int, r float64, rng *rand.Rand)
 }

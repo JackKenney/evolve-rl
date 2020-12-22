@@ -146,6 +146,6 @@ func (env Gridworld) NewEpisode(rng *rand.Rand) {
 	env.y = 0
 	env.t = 0
 
-	// We are not starting in the terminal absorbing state
+	// We do not start in the terminal absorbing state
 	env.tas = false
 }
