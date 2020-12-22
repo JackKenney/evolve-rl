@@ -38,7 +38,8 @@ func FromOneHot(v []float64) int {
 			break
 		}
 	}
-	if state == len(v) { // If this happens, the s-vector was all zeros
+	if state == len(v) {
+		// If this happens, the s-vector was all zeros
 		panic("state vector was all zeros")
 	}
 	return state

@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/jackkenney/evolve-rl/mathlib"
@@ -35,6 +36,7 @@ func NewTabularBBO(stateDim int, numActions int, gamma float64, N int, maxEps in
 	bbo.maxEps = maxEps
 	bbo.N = N
 	bbo.t = 0
+	bbo.epCount = 0
 
 	bbo.states = make([][]int, bbo.N)
 	bbo.actions = make([][]int, bbo.N)
@@ -75,7 +77,7 @@ func (bbo *TabularBBO) GetAction(s []float64, rng *mathlib.Random) int {
 	for a := 0; a < len(actionProbabilities); a++ {
 		actionProbabilities[a] /= denominator
 	}
-
+	// Select random action from softmax
 	temp := rng.Float64()
 	sum := 0.0
 	for a := 0; a < bbo.numActions; a++ {
@@ -104,16 +106,21 @@ func (bbo *TabularBBO) UpdateSARS(s []float64, a int, r float64, sPrime []float6
 
 // UpdateSARSA - given a (s,a,r,s',a') tuple
 func (bbo *TabularBBO) UpdateSARSA(s []float64, a int, r float64, sPrime []float64, aPrime int, rng *mathlib.Random) {
-	// Increment timeline
-	bbo.t++
+	if bbo.epCount == bbo.N {
+		bbo.episodeLimitReached(rng)
+	}
+	fmt.Println(bbo.epCount, bbo.t)
 	// Update logs
 	bbo.states[bbo.epCount][bbo.t] = mathlib.FromOneHot(s)
 	bbo.actions[bbo.epCount][bbo.t] = a
 	bbo.rewards[bbo.epCount][bbo.t] = r
+	// Increment timeline
+	bbo.t++
 }
 
 // LastUpdate lets the agent update/learn when sPrime would be the terminal absorbing state.
 func (bbo *TabularBBO) LastUpdate(s []float64, a int, r float64, rng *mathlib.Random) {
+	fmt.Println(bbo.epCount, bbo.t)
 	// Update logs
 	bbo.states[bbo.epCount][bbo.t] = mathlib.FromOneHot(s)
 	bbo.actions[bbo.epCount][bbo.t] = a
@@ -126,11 +133,17 @@ func (bbo *TabularBBO) LastUpdate(s []float64, a int, r float64, rng *mathlib.Ra
 	bbo.epCount++
 
 	// If ready to update, update and wipe the states, actions, and rewards.
-	if bbo.epCount >= bbo.N {
-		bbo.episodicUpdate(rng)
-		bbo.wipeStatesActionsRewards()
-		bbo.epCount = 0
+	if bbo.epCount == bbo.N {
+		bbo.episodeLimitReached(rng)
 	}
+}
+
+func (bbo *TabularBBO) episodeLimitReached(rng *mathlib.Random) {
+	fmt.Println(bbo.epCount, bbo.t)
+	bbo.episodicUpdate(rng)
+	bbo.wipeStatesActionsRewards()
+	bbo.epCount = 0
+	bbo.t = 0
 }
 
 // EpisodicUpdate the agent after N episodes (specified in constructor)

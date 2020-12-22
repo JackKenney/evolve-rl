@@ -14,7 +14,8 @@ func runEpisode(
 	agt internal.Agent, // The agent to run. The * here means that this is a pointer to an agent object. "pointer" means "memory location". So, this function takes as input the location of an object in memory, and that object satisfies the spceifications of the "Agent" class.
 	env internal.Environment, // The environment to run on (pointer)
 	gamma float64, // The discount factor to use
-	rng *mathlib.Random) float64 { // Random number rng to use
+	rng *mathlib.Random, // Random number rng to use
+) float64 {
 
 	// Tell the agent and environment that we're starting a new episode. For the first episode, this may be redundant if the agent and environment were just created
 	env.NewEpisode(rng)
@@ -37,13 +38,16 @@ func runEpisode(
 		result += curGamma * reward             // Update the return for this episode
 		curGamma *= gamma                       // Decay curGamma
 
-		if env.InTAS() { // Check if in the terminal absorbing state
+		// Check if in the terminal absorbing state
+		if env.InTAS() {
 			agt.LastUpdate(curState, curAction, reward, rng) // In the terminal absorbing state, so do a special temrinal update
 			break                                            // Break out of the loop over time.
 		}
 
-		newState = env.GetState()         // If we get here, the new state isn't the terminal absorbing state. Get the new state.
-		if agt.UpdateBeforeNextAction() { // Check if we should update before computing the next action
+		// If we get here, the new state isn't the terminal absorbing state. Get the new state.
+		newState = env.GetState()
+		// Check if we should update before computing the next action
+		if agt.UpdateBeforeNextAction() {
 			agt.UpdateSARS(curState, curAction, reward, newState, rng) // Update before getting the new action
 			newAction = agt.GetAction(newState, rng)                   // Get the new action
 		} else {
@@ -62,7 +66,8 @@ func runAgentEnvironment(
 	env internal.Environment, // The environment to run on (pointer)
 	maxEps int, // The number of episodes to run
 	gamma float64, // The discount factor to use
-	rng *mathlib.Random) []float64 { // Random number rng to use.
+	rng *mathlib.Random, // Random number rng to use.
+) []float64 {
 
 	// Wipe the agent to start a new trial
 	agt.Reset(rng)
@@ -104,8 +109,10 @@ func main() {
 	fmt.Println("Starting trial 1 of ", numTrials+1) // "cout" means "console out", and is our print command. Separate objects to print with the << symbol. Here we are printing a string, followed by an integer, followed by std::endl (end line).
 
 	var wg sync.WaitGroup
-	for trial := 0; trial < numTrials; trial++ { // Loop over trials
-		if (trial+1)%1 == 0 { // % means "mod"
+	// Loop over trials
+	for trial := 0; trial < numTrials; trial++ {
+		// % means "mod"
+		if (trial+1)%1 == 0 {
 			fmt.Println("Starting trial ", trial+1, " of ", numTrials)
 		}
 		// Run the agent on the environment for this trial, and store the result in the trial'th row of returns.

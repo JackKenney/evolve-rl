@@ -60,14 +60,17 @@ func (env *Gridworld) Transition(a int, r *mathlib.Random) float64 {
 	// Temp is a uniform random number from 0 to one.
 	temp := r.Float64()
 
-	if temp <= 0.1 { // This should pass 10% of the time
+	if temp <= 0.1 {
+		// This should pass 10% of the time
 		effectiveAction = -1 // Actions -1 causes the "stay" behavior below
-	} else if temp <= 0.15 { // This should pass (but not the previous if-statement) 5% of the time.
+	} else if temp <= 0.15 {
+		// This should pass (but not the previous if-statement) 5% of the time.
 		effectiveAction++ // Rotate the action 90 degrees
 		if effectiveAction == 4 {
 			effectiveAction = 0 // Wrap around
 		}
-	} else if temp <= 0.2 { // This should happen 5% of the time
+	} else if temp <= 0.2 {
+		// This should happen 5% of the time
 		effectiveAction-- // Rotate the action -90 degrees
 		if effectiveAction == -1 {
 			effectiveAction = 3 // Wrap around
@@ -118,13 +121,13 @@ func (env *Gridworld) GetState() []float64 {
 
 		// Cut the two obstacles. You can work out with pen and paper that this should do what we want. Or, you could run the "manual" agent and have the agent walk around the environment to confirm the desired behavior.
 		if state == 12 { // This is the upper obstacle. Note that states start at 0 here, unlike the course notes where they start at 1
-			panic("Agent inside of obstacle")
+			panic("Agent inside of upper obstacle")
 		}
 		if state > 12 {
 			state--
 		}
 		if state == 16 { // This is the lower obstacle (after being shifted left one)
-			panic("Agent inside of obstacle")
+			panic("Agent inside of lower obstacle")
 		}
 		if state > 16 {
 			state--

@@ -38,3 +38,13 @@ func TestUpdateSARSA(t *testing.T) {
 	newT := agt.(*TabularBBO).t
 	assert.NotEqual(t, oldT, newT, "time did not update")
 }
+
+func TestNLimit(t *testing.T) {
+	agt.(*TabularBBO).epCount = agt.(*TabularBBO).N
+	s := env.GetState()
+	a := agt.GetAction(s, rng)
+	r := env.Transition(a, rng)
+	sp := env.GetState()
+	ap := agt.GetAction(sp, rng)
+	agt.UpdateSARSA(s, a, r, sp, ap, rng)
+}

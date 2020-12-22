@@ -40,6 +40,6 @@ func TestTAS(t *testing.T) {
 	grid.y = 4
 	grid.Transition(0, rng)
 	assert.Equal(t, 1, grid.t, "time did not increment")
-	assert.True(t, grid.tas, "grid.tas not correct")
-	assert.True(t, grid.InTAS(), "InTAS does not work")
+	assert.True(t, grid.tas, "grid.tas didn't change")
+	assert.True(t, grid.InTAS(), "InTAS didn't change")
 }
