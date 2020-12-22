@@ -4,7 +4,7 @@ import (
 	"math/rand"
 )
 
-// Environment interface outlines abstract methods for an Environment class.
+// Environment interface outlines abstract methods for an environment class.
 type Environment interface {
 	// How many episodes should be run?
 	GetMaxEps() int

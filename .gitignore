@@ -10,6 +10,9 @@ bin/*
 *.so
 *.dylib
 
+# Data files
+*.csv
+
 # Test binary, built with `go test -c`
 *.test
 

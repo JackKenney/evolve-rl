@@ -42,23 +42,27 @@ func (env Gridworld) GetGamma() float64 {
 
 // Transition applies action a, updating the state of the environment. It returns the reward that results from the state transition.
 func (env Gridworld) Transition(a int, r *rand.Rand) float64 {
+	// Count the next timestep
+	env.t++
+
 	// Check if we should transition to s_infty.
 	if env.x == 4 && env.y == 4 {
 		env.tas = true
-		return 0
+		return 0.0
 	}
 
 	// Check if we should terminate due to running too long
-	env.t++
 	if env.t == 100 {
+		fmt.Print("Terminating")
 		env.tas = true
-		return -100
+		return -100.0
 	}
 
 	// We implement the "veer" and "stay" behavior with an "effective action" that is modified from the actual action "a"
 	effectiveAction := a
 
-	temp := r.Float64() // Temp is a uniform random number from 0 to one.
+	// Temp is a uniform random number from 0 to one.
+	temp := r.Float64()
 
 	if temp <= 0.1 { // This should pass 10% of the time
 		effectiveAction = -1 // Actions -1 causes the "stay" behavior below
@@ -68,7 +72,6 @@ func (env Gridworld) Transition(a int, r *rand.Rand) float64 {
 			effectiveAction = 0 // Wrap around
 		}
 	} else if temp <= 0.2 { // This should happen 5% of the time
-
 		effectiveAction-- // Rotate the action -90 degrees
 		if effectiveAction == -1 {
 			effectiveAction = 3 // Wrap around
@@ -102,17 +105,20 @@ func (env Gridworld) Transition(a int, r *rand.Rand) float64 {
 	} else if (env.x == 4) && (env.y == 4) {
 		return 10 // The agent is in the bottom-right "goal" state.
 	} else {
-		return 0 // The agent isn'env.t in the water or the "goal" state, so the reward is zero
+		return 0 // The agent isn't in the water or the "goal" state, so the reward is zero
 	}
 }
 
 // GetState returns the current state of the environment
 func (env Gridworld) GetState() []float64 {
+	// Check if we should transition to s_infty.
+	if env.x == 4 && env.y == 4 {
+		env.tas = true
+	}
 	// Create the object we will return, and initialize to the zero-vector, of length 23.
 	result := make([]float64, 23) // make an int slice of length 5
 	if !env.tas {                 // If we are in the terminal absorbing state, this shouldn't be called. Just in case, let's use the all-zero vector to denote the TAS
 		state := env.y*5 + env.x // map the x,y coordinates to a number in [0,24]
-		fmt.Println(state)
 
 		// Cut the two obstacles. You can work out with pen and paper that this should do what we want. Or, you could run the "manual" agent and have the agent walk around the environment to confirm the desired behavior.
 		if state == 12 { // This is the upper obstacle. Note that states start at 0 here, unlike the course notes where they start at 1
@@ -145,7 +151,6 @@ func (env Gridworld) NewEpisode(rng *rand.Rand) {
 	env.x = 0
 	env.y = 0
 	env.t = 0
-
 	// We do not start in the terminal absorbing state
 	env.tas = false
 }

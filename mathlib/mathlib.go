@@ -2,9 +2,6 @@ package mathlib
 
 import "math"
 
-// MathUtils has methods for creating slices.
-type MathUtils struct{}
-
 // Vector creates a slice with initial value.
 func Vector(size int, initialValue float64) []float64 {
 	vec := make([]float64, size)
@@ -72,8 +69,8 @@ func Mean(v []float64) float64 {
 // StdError calculate and return the standard error for this slice.
 func StdError(v []float64) float64 {
 	// The most common object types are int (integer), double (double precision floating point), bool (Boolean), VectorXd (vector), MatrixXd (matrix), and vector<type>. We'll talk about vector<type> later.
-	sampleMean := m.Mean(v) // First, get the mean of the vector
-	temp := 0.0             // Create a floating point (double precision) equal to zero
+	sampleMean := Mean(v) // First, get the mean of the vector
+	temp := 0.0           // Create a floating point (double precision) equal to zero
 	// Below the (int) term means "cast the next thing into an "int" type. v.size() actually returns a long integer. C++ will automatically cast it to an int to compare to i, but your compiler might give you a warning that you're comparing two different integer types. The explicit casting to an "int" here avoids that warning.
 	for _, val := range v { // This is a basic for loop. The variable i is initialized to zero at the start, it runs as long as i < (int)v.size(), and at the end of every iteration of the loop it calls i++ (i = i + 1).
 		temp += (val - sampleMean) * (val - sampleMean) // temp += foo; means the same thing as temp = temp + foo;

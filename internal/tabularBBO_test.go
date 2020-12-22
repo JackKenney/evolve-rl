@@ -19,7 +19,7 @@ func init() {
 }
 
 func TestUpdateBeforeNextAction(t *testing.T) {
-	assert.True(t, agt.UpdateBeforeNextAction())
+	assert.False(t, agt.UpdateBeforeNextAction())
 }
 
 func TestGetAction(t *testing.T) {
