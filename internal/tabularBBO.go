@@ -2,7 +2,6 @@ package internal
 
 import (
 	"math"
-	"math/rand"
 
 	"github.com/jackkenney/evolve-rl/mathlib"
 )
@@ -63,7 +62,7 @@ func (bbo *TabularBBO) EpisodicAgent() bool {
 }
 
 // GetAction returns the action that the agent selects from the state.
-func (bbo *TabularBBO) GetAction(s []float64, rng *rand.Rand) int {
+func (bbo *TabularBBO) GetAction(s []float64, rng *mathlib.Random) int {
 	// Convert the one-hot state into an integer from 0 - (numStates-1)
 	state := mathlib.FromOneHot(s)
 	// Get the action probabilities from theta, using softmax action selection.
@@ -92,19 +91,19 @@ func (bbo *TabularBBO) GetAction(s []float64, rng *rand.Rand) int {
 func (bbo *TabularBBO) NewEpisode() {}
 
 // Reset the agent entirely - to a blank slate prior to learning
-func (bbo *TabularBBO) Reset(rng *rand.Rand) {
+func (bbo *TabularBBO) Reset(rng *mathlib.Random) {
 	bbo.epCount = 0
 	bbo.wipeStatesActionsRewards()
 }
 
 // UpdateSARS is unimplemented for this class.
-func (bbo *TabularBBO) UpdateSARS(s []float64, a int, r float64, sPrime []float64, rng *rand.Rand) {
+func (bbo *TabularBBO) UpdateSARS(s []float64, a int, r float64, sPrime []float64, rng *mathlib.Random) {
 	// Shouldn't be using this function
 	panic("UpdateSARS is not implemented for TabularBBO.")
 }
 
 // UpdateSARSA - given a (s,a,r,s',a') tuple
-func (bbo *TabularBBO) UpdateSARSA(s []float64, a int, r float64, sPrime []float64, aPrime int, rng *rand.Rand) {
+func (bbo *TabularBBO) UpdateSARSA(s []float64, a int, r float64, sPrime []float64, aPrime int, rng *mathlib.Random) {
 	// Increment timeline
 	bbo.t++
 	// Update logs
@@ -114,7 +113,7 @@ func (bbo *TabularBBO) UpdateSARSA(s []float64, a int, r float64, sPrime []float
 }
 
 // LastUpdate lets the agent update/learn when sPrime would be the terminal absorbing state.
-func (bbo *TabularBBO) LastUpdate(s []float64, a int, r float64, rng *rand.Rand) {
+func (bbo *TabularBBO) LastUpdate(s []float64, a int, r float64, rng *mathlib.Random) {
 	// Update logs
 	bbo.states[bbo.epCount][bbo.t] = mathlib.FromOneHot(s)
 	bbo.actions[bbo.epCount][bbo.t] = a
@@ -135,7 +134,7 @@ func (bbo *TabularBBO) LastUpdate(s []float64, a int, r float64, rng *rand.Rand)
 }
 
 // EpisodicUpdate the agent after N episodes (specified in constructor)
-func (bbo *TabularBBO) episodicUpdate(rng *rand.Rand) {
+func (bbo *TabularBBO) episodicUpdate(rng *mathlib.Random) {
 	// We are going to compute newThetaJHat (an estimate of how good the new policy is), and will then
 	// see if it is better than the best policy we found so far.
 	bbo.newThetaJHat = 0

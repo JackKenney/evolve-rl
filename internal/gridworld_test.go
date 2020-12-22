@@ -1,9 +1,9 @@
 package internal
 
 import (
-	"math/rand"
 	"testing"
 
+	"github.com/jackkenney/evolve-rl/mathlib"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,8 +12,7 @@ var (
 )
 
 func init() {
-	source = rand.NewSource(0)
-	rng = rand.New(source)
+	rng = mathlib.NewRandom(0)
 	grid = NewGridworld(rng).(*Gridworld)
 }
 

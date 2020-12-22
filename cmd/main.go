@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
 	"os"
 	"strconv"
 	"sync"
@@ -15,7 +14,7 @@ func runEpisode(
 	agt internal.Agent, // The agent to run. The * here means that this is a pointer to an agent object. "pointer" means "memory location". So, this function takes as input the location of an object in memory, and that object satisfies the spceifications of the "Agent" class.
 	env internal.Environment, // The environment to run on (pointer)
 	gamma float64, // The discount factor to use
-	rng *rand.Rand) float64 { // Random number rng to use.
+	rng *mathlib.Random) float64 { // Random number rng to use.
 
 	// Tell the agent and environment that we're starting a new episode. For the first episode, this may be redundant if the agent and environment were just created
 	env.NewEpisode(rng)
@@ -63,7 +62,7 @@ func runAgentEnvironment(
 	env internal.Environment, // The environment to run on (pointer)
 	maxEps int, // The number of episodes to run
 	gamma float64, // The discount factor to use
-	rng *rand.Rand) []float64 { // Random number rng to use.
+	rng *mathlib.Random) []float64 { // Random number rng to use.
 
 	// Wipe the agent to start a new trial
 	agt.Reset(rng)
@@ -79,6 +78,7 @@ func runAgentEnvironment(
 		}(epCount)
 	}
 	wg.Wait()
+
 	fmt.Println(result)
 
 	// Return the "result" variable, holding the returns from each episode.
@@ -87,8 +87,7 @@ func runAgentEnvironment(
 
 func main() {
 	// Create objects we will use
-	source := rand.NewSource(0) // Random number rng, seeded with zero
-	rng := rand.New(source)
+	rng := mathlib.NewRandom(0)
 	env := internal.NewGridworld(rng) // Create the environment, in this case a Gridworld
 	numTrials := 100                  // Specify the number of trials to run and get the number of episodes per tiral.
 

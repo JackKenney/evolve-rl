@@ -1,19 +1,16 @@
 package internal
 
 import (
-	"math/rand"
-
+	"github.com/jackkenney/evolve-rl/mathlib"
 	"github.com/stretchr/testify/assert"
 )
 
 var (
-	source rand.Source
-	rng    *rand.Rand
-	a      assert.Assertions
-	env    Environment
+	rng *mathlib.Random
+	a   assert.Assertions
+	env Environment
 )
 
 func init() {
-	source = rand.NewSource(0)
-	rng = rand.New(source)
+	rng = mathlib.NewRandom(0)
 }

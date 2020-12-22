@@ -1,8 +1,6 @@
 package internal
 
-import (
-	"math/rand"
-)
+import "github.com/jackkenney/evolve-rl/mathlib"
 
 // Environment interface outlines abstract methods for an environment class.
 type Environment interface {
@@ -15,13 +13,13 @@ type Environment interface {
 	// This function returns \gamma
 	GetGamma() float64
 	// This function applies action a, updating the state of the environment. It returns the reward that results from the state transition.
-	Transition(a int, rng *rand.Rand) float64
+	Transition(a int, rng *mathlib.Random) float64
 	// This function returns the current state of the environment
 	GetState() []float64
 	// Check if the current state is Terminal Absorbing State (TAS)
 	InTAS() bool
 	// This function resets the environment to start a new episode (it samples the state from the initial state distribution).
-	NewEpisode(rng *rand.Rand)
+	NewEpisode(rng *mathlib.Random)
 	// DeepCopy returns deep copy of struct
-	DeepCopy(rng *rand.Rand) Environment
+	DeepCopy(rng *mathlib.Random) Environment
 }

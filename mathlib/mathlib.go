@@ -92,6 +92,7 @@ type Random struct {
 // NewRandom returns a new threadsafe random number generator.
 func NewRandom(seed int64) *Random {
 	r := Random{}
+	r.mu = &sync.RWMutex{}
 	r.source = rand.NewSource(seed)
 	r.rng = rand.New(r.source)
 	return &r

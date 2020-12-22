@@ -1,8 +1,6 @@
 package internal
 
-import (
-	"math/rand"
-)
+import "github.com/jackkenney/evolve-rl/mathlib"
 
 // Gridworld object which extends the Environment interface
 type Gridworld struct {
@@ -13,7 +11,7 @@ type Gridworld struct {
 }
 
 // NewGridworld returns a new Gridworld Environment object.
-func NewGridworld(rng *rand.Rand) Environment {
+func NewGridworld(rng *mathlib.Random) Environment {
 	env := Gridworld{}
 	env.NewEpisode(rng)
 	return &env
@@ -40,7 +38,7 @@ func (env *Gridworld) GetGamma() float64 {
 }
 
 // Transition applies action a, updating the state of the environment. It returns the reward that results from the state transition.
-func (env *Gridworld) Transition(a int, r *rand.Rand) float64 {
+func (env *Gridworld) Transition(a int, r *mathlib.Random) float64 {
 	// Count the next timestep
 	env.t++
 
@@ -144,7 +142,7 @@ func (env *Gridworld) InTAS() bool {
 }
 
 // NewEpisode resets the environment to start a new episode (it samples the state from the initial state distribution).
-func (env *Gridworld) NewEpisode(rng *rand.Rand) {
+func (env *Gridworld) NewEpisode(rng *mathlib.Random) {
 	// Start at position (0,0), with the time counter also equal to zero
 	env.x = 0
 	env.y = 0
@@ -154,6 +152,6 @@ func (env *Gridworld) NewEpisode(rng *rand.Rand) {
 }
 
 // DeepCopy returns a deep copy of the struct
-func (env *Gridworld) DeepCopy(rng *rand.Rand) Environment {
+func (env *Gridworld) DeepCopy(rng *mathlib.Random) Environment {
 	return NewGridworld(rng)
 }
