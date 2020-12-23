@@ -22,6 +22,4 @@ type Agent interface {
 	// episodicUpdate(rng *mathlib.Random)
 	// // Clear agent's memory
 	// wipeStatesActionsRewards()
-	// DeepCopy returns deep copy of struct
-	DeepCopy() Agent
 }

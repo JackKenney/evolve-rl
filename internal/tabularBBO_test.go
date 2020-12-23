@@ -13,7 +13,7 @@ var (
 
 func init() {
 	rng = mathlib.NewRandom(0)
-	agt = NewTabularBBO(23, 4, 0.9, 1, 1000).(Agent)
+	agt = NewTabularBBO(23, 4, 0.9, 1).(Agent)
 	env = NewGridworld(rng)
 }
 
@@ -33,14 +33,14 @@ func TestUpdateSARSA(t *testing.T) {
 	r := env.Transition(a, rng)
 	sp := env.GetState()
 	ap := agt.GetAction(sp, rng)
-	oldT := agt.(*TabularBBO).t
+	oldT := agt.(*TabularBBO).ep.t
 	agt.UpdateSARSA(s, a, r, sp, ap, rng)
-	newT := agt.(*TabularBBO).t
+	newT := agt.(*TabularBBO).ep.t
 	assert.NotEqual(t, oldT, newT, "time did not update")
 }
 
 func TestNLimit(t *testing.T) {
-	agt.(*TabularBBO).epCount = agt.(*TabularBBO).N
+	agt.(*TabularBBO).ep.epCount = agt.(*TabularBBO).ep.N - 1
 	s := env.GetState()
 	a := agt.GetAction(s, rng)
 	r := env.Transition(a, rng)

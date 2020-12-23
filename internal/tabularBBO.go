@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/jackkenney/evolve-rl/mathlib"
@@ -9,17 +8,11 @@ import (
 
 // TabularBBO learning agent using black box optimization
 type TabularBBO struct {
-	N       int         // How many episodes before update?
-	maxEps  int         // How many episodes will be run?
-	t       int         // Timestep in current episode
-	states  [][]int     // States history
-	actions [][]int     // Action history
-	rewards [][]float64 // Rewards history
-
 	numStates  int     // How many discrete states?
 	numActions int     // How many discrete actions?
-	epCount    int     // Track how many episodes have been run.
 	gamma      float64 // Discount parameter
+
+	ep *EpisodeTracker // tracks history for use by episodic agent
 
 	curTheta     [][]float64 // The current best policy we have found
 	curThetaJHat float64     // $\hat J(\theta_\text{cur})$ in LaTeX, this is the estimate of how good the current policy is
@@ -29,19 +22,11 @@ type TabularBBO struct {
 }
 
 // NewTabularBBO returns an initialized TabularBBO object.
-func NewTabularBBO(stateDim int, numActions int, gamma float64, N int, maxEps int) Agent {
+func NewTabularBBO(stateDim int, numActions int, gamma float64, N int) Agent {
 	bbo := TabularBBO{}
 
+	bbo.ep = NewEpisodeTracker(N)
 	bbo.numStates = stateDim
-	bbo.maxEps = maxEps
-	bbo.N = N
-	bbo.t = 0
-	bbo.epCount = 0
-
-	bbo.states = make([][]int, bbo.N)
-	bbo.actions = make([][]int, bbo.N)
-	bbo.rewards = make([][]float64, bbo.N)
-	bbo.wipeStatesActionsRewards()
 
 	bbo.newTheta = make([][]float64, bbo.numStates)
 	bbo.curTheta = make([][]float64, bbo.numStates)
@@ -94,8 +79,7 @@ func (bbo *TabularBBO) NewEpisode() {}
 
 // Reset the agent entirely - to a blank slate prior to learning
 func (bbo *TabularBBO) Reset(rng *mathlib.Random) {
-	bbo.epCount = 0
-	bbo.wipeStatesActionsRewards()
+	bbo.ep.Wipe()
 }
 
 // UpdateSARS is unimplemented for this class.
@@ -106,63 +90,39 @@ func (bbo *TabularBBO) UpdateSARS(s []float64, a int, r float64, sPrime []float6
 
 // UpdateSARSA - given a (s,a,r,s',a') tuple
 func (bbo *TabularBBO) UpdateSARSA(s []float64, a int, r float64, sPrime []float64, aPrime int, rng *mathlib.Random) {
-	if bbo.epCount == bbo.N {
-		bbo.episodeLimitReached(rng)
-	}
-	fmt.Println(bbo.epCount, bbo.t)
-	// Update logs
-	bbo.states[bbo.epCount][bbo.t] = mathlib.FromOneHot(s)
-	bbo.actions[bbo.epCount][bbo.t] = a
-	bbo.rewards[bbo.epCount][bbo.t] = r
-	// Increment timeline
-	bbo.t++
+	bbo.ep.Update(s, a, r, s)
 }
 
 // LastUpdate lets the agent update/learn when sPrime would be the terminal absorbing state.
 func (bbo *TabularBBO) LastUpdate(s []float64, a int, r float64, rng *mathlib.Random) {
-	fmt.Println(bbo.epCount, bbo.t)
-	// Update logs
-	bbo.states[bbo.epCount][bbo.t] = mathlib.FromOneHot(s)
-	bbo.actions[bbo.epCount][bbo.t] = a
-	bbo.rewards[bbo.epCount][bbo.t] = r
-
-	// Reset the episode timeline
-	bbo.t = 0
-
-	// Increment episode counter
-	bbo.epCount++
-
 	// If ready to update, update and wipe the states, actions, and rewards.
-	if bbo.epCount == bbo.N {
+	if bbo.ep.LastUpdate(s, a, r) {
 		bbo.episodeLimitReached(rng)
 	}
 }
 
 func (bbo *TabularBBO) episodeLimitReached(rng *mathlib.Random) {
-	fmt.Println(bbo.epCount, bbo.t)
 	bbo.episodicUpdate(rng)
-	bbo.wipeStatesActionsRewards()
-	bbo.epCount = 0
-	bbo.t = 0
+	bbo.ep.Wipe()
 }
 
 // EpisodicUpdate the agent after N episodes (specified in constructor)
 func (bbo *TabularBBO) episodicUpdate(rng *mathlib.Random) {
-	// We are going to compute newThetaJHat (an estimate of how good the new policy is), and will then
-	// see if it is better than the best policy we found so far.
+	// We are going to compute newThetaJHat (an estimate of how good the new policy is),
+	// and will then see if it is better than the best policy we found so far.
 	bbo.newThetaJHat = 0
 
 	// Loop over the N episodes
-	for ep := 0; ep < bbo.N; ep++ {
+	for ep := 0; ep < bbo.ep.N; ep++ {
 		// Compute the return
 		curGamma := 1.0
-		epLen := len(bbo.rewards[ep])
+		epLen := len(bbo.ep.rewards[ep])
 		for t := 0; t < epLen; t++ {
-			bbo.newThetaJHat += curGamma * bbo.rewards[ep][t]
+			bbo.newThetaJHat += curGamma * bbo.ep.rewards[ep][t]
 			curGamma *= bbo.gamma
 		}
 	}
-	bbo.newThetaJHat /= float64(bbo.N)
+	bbo.newThetaJHat /= float64(bbo.ep.N)
 
 	// Is the new policy better than our current best?
 	if bbo.newThetaJHat > bbo.curThetaJHat {
@@ -178,18 +138,4 @@ func (bbo *TabularBBO) episodicUpdate(rng *mathlib.Random) {
 			bbo.newTheta[s][a] += rng.Float64()*4 - 2
 		}
 	}
-}
-
-// Clear agent's memory
-func (bbo *TabularBBO) wipeStatesActionsRewards() {
-	for i := 0; i < bbo.N; i++ {
-		bbo.states[i] = make([]int, bbo.maxEps)
-		bbo.actions[i] = make([]int, bbo.maxEps)
-		bbo.rewards[i] = make([]float64, bbo.maxEps)
-	}
-}
-
-// DeepCopy returns deep copy of the agent
-func (bbo *TabularBBO) DeepCopy() Agent {
-	return NewTabularBBO(bbo.numStates, bbo.numActions, bbo.gamma, bbo.N, bbo.maxEps)
 }

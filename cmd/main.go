@@ -85,8 +85,8 @@ func runAgentEnvironment(
 func main() {
 	// Create objects we will use
 	rng := mathlib.NewRandom(0)
+	numTrials := 1000                 // Specify the number of trials to run and get the number of episodes per tiral.
 	env := internal.NewGridworld(rng) // Create the environment, in this case a Gridworld
-	numTrials := 100                  // Specify the number of trials to run and get the number of episodes per tiral.
 
 	// Get some values once so we don't have to keep looking them up (i.e., so we can type less later)
 	stateDim := env.GetStateDim()
@@ -99,9 +99,6 @@ func main() {
 	/////
 	//Manual a1;					// Create the agent
 	N := 10 // How many episodes are run between update calls within TabularRandomSearch?
-
-	// a1 := internal.REINFORCE(stateDim, numActions, gamma) //  REINFORCE doesn't take N, since it will always use N = 1.
-	a2 := internal.NewTabularBBO(stateDim, numActions, gamma, N, maxEps)
 
 	// var returnsA1 = mathlib.Matrix(numTrials, maxEps, 0) // Create a matrix to store the resulting returns. results(i,j) = the return on the j'th episode of the i'th trial.
 	var returnsA2 = mathlib.Matrix(numTrials, maxEps, 0) // Same as above, but for the second agent
@@ -119,10 +116,16 @@ func main() {
 		// The & before a1 and env indicates that we are passing pointers to a1, a2, and env. This is because runAgentEnvironment
 		// won't know the type of the agent and environment, only that they meet the specifications of Agent.hpp and Environment.hpp.
 		// So, on their end, these inputs are pointers to objects of unknown exact type, but which meet the Agent/Environment specifications.
-		// returnsA1[trial] = runAgentEnvironment(&a1, &env, maxEps, gamma, a1.updateBeforeNextAction(), rng).transpose()
 		wg.Add(1)
 		go func(i int) {
+			// create objects
+			env := internal.NewGridworld(rng) // Create the environment, in this case a Gridworld
+			// a1 := internal.REINFORCE(stateDim, numActions, gamma) //  REINFORCE doesn't take N, since it will always use N = 1.
+			a2 := internal.NewTabularBBO(stateDim, numActions, gamma, N)
+			// get returns from history
+			// returnsA1[trial] = runAgentEnvironment(&a1, &env, maxEps, gamma, a1.updateBeforeNextAction(), rng).transpose()
 			returnsA2[i] = runAgentEnvironment(a2, env, maxEps, gamma, rng)
+
 			wg.Done()
 		}(trial)
 	}

@@ -153,8 +153,3 @@ func (env *Gridworld) NewEpisode(rng *mathlib.Random) {
 	// We do not start in the terminal absorbing state
 	env.tas = false
 }
-
-// DeepCopy returns a deep copy of the struct
-func (env *Gridworld) DeepCopy(rng *mathlib.Random) Environment {
-	return NewGridworld(rng)
-}
