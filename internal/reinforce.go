@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/jackkenney/evolve-rl/mathlib"
@@ -128,7 +127,6 @@ func (agt *REINFORCE) episodicUpdate(rng *mathlib.Random) {
 		piS = mathlib.ExpVec(agt.theta[s])
 		piS = mathlib.ScalarDivideVec(piS, mathlib.Sum(piS))
 
-		fmt.Println(a)
 		gradientEstimate[s][a] += G * (1.0 - piS[a])
 		for aPrime := 0; aPrime < agt.numActions; aPrime++ {
 			if aPrime != a {
@@ -140,5 +138,6 @@ func (agt *REINFORCE) episodicUpdate(rng *mathlib.Random) {
 	// Note: Drop the gamma^t term that is usually dropped in actual implementations!
 
 	// Perform the actual update.
-	agt.theta = mathlib.AddMatrix(agt.theta, mathlib.ScalarMultiplyMat(gradientEstimate, agt.alpha))
+	scaledGradientEstimate := mathlib.ScalarMultiplyMat(gradientEstimate, agt.alpha)
+	agt.theta = mathlib.AddMatrix(agt.theta, scaledGradientEstimate)
 }

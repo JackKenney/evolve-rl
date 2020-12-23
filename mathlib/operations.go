@@ -1,6 +1,8 @@
 package mathlib
 
-import "math"
+import (
+	"math"
+)
 
 // ScalarMultiplyVec divides the passed vector by the passed scalar
 func ScalarMultiplyVec(v []float64, c float64) []float64 {
@@ -35,7 +37,7 @@ func AddMatrix(a [][]float64, b [][]float64) [][]float64 {
 		if len(a[i]) != len(b[i]) {
 			panic("a and b have different number of columns")
 		}
-		for j := 0; j < len(a[i]); i++ {
+		for j := 0; j < len(a[i]); j++ {
 			a[i][j] *= b[i][j]
 		}
 	}
@@ -45,7 +47,7 @@ func AddMatrix(a [][]float64, b [][]float64) [][]float64 {
 // ScalarMultiplyMat divides the passed vector by the passed scalar
 func ScalarMultiplyMat(mat [][]float64, c float64) [][]float64 {
 	for i := 0; i < len(mat); i++ {
-		for j := 0; j < len(mat[i]); i++ {
+		for j := 0; j < len(mat[i]); j++ {
 			mat[i][j] *= c
 		}
 	}

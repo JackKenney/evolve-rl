@@ -133,15 +133,16 @@ func (env *Gridworld) GetState() []float64 {
 			state--
 		}
 		result[state] = 1.0
+	} else {
+		panic("GetState called when in TAS.")
 	}
-
 	// Return the computed state representation
 	return result
 }
 
 // InTAS returns whether the current state is Terminal Absorbing State (TAS)
 func (env *Gridworld) InTAS() bool {
-	return env.tas
+	return env.tas || (env.x == 4 && env.y == 4)
 }
 
 // NewEpisode resets the environment to start a new episode (it samples the state from the initial state distribution).

@@ -34,12 +34,30 @@ func TestTransition(t *testing.T) {
 	b := s[0] == 1.0 || s[1] == 1.0
 	assert.True(t, b)
 }
-func TestTAS(t *testing.T) {
+
+func TestTASLocation(t *testing.T) {
 	grid = NewGridworld(rng).(*Gridworld)
 	grid.x = 4
 	grid.y = 4
-	grid.Transition(0, rng)
-	assert.Equal(t, 1, grid.t, "time did not increment")
+	r := grid.Transition(0, rng)
+	assert.Equal(t, 0.0, r, "wrong error returned from transition to TAS")
 	assert.True(t, grid.tas, "grid.tas didn't change")
 	assert.True(t, grid.InTAS(), "InTAS didn't change")
+}
+
+func TestTASTime(t *testing.T) {
+	grid = NewGridworld(rng).(*Gridworld)
+	grid.x = 0
+	grid.y = 0
+	grid.t = 99 // at t=100, Transition to TAS and get -100 for reward
+	assert.NotPanics(t, func() {
+		grid.GetState()
+	})
+	r := grid.Transition(0, rng)
+	assert.Equal(t, -100.0, r, "wrong error returned from transition to TAS")
+	assert.True(t, grid.tas, "grid.tas didn't change")
+	assert.True(t, grid.InTAS(), "InTAS didn't change")
+	assert.Panics(t, func() {
+		grid.GetState()
+	})
 }

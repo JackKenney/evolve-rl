@@ -44,8 +44,8 @@ func runEpisode(
 			break                                            // Break out of the loop over time.
 		}
 
-		// If we get here, the new state isn't the terminal absorbing state. Get the new state.
 		newState = env.GetState()
+
 		// Check if we should update before computing the next action
 		if agt.UpdateBeforeNextAction() {
 			agt.UpdateSARS(curState, curAction, reward, newState, rng) // Update before getting the new action
@@ -100,7 +100,7 @@ func main() {
 	//Manual a1;					// Create the agent
 	N := 10 // How many episodes are run between update calls within TabularRandomSearch?
 
-	// var returnsA1 = mathlib.Matrix(numTrials, maxEps, 0) // Create a matrix to store the resulting returns. results(i,j) = the return on the j'th episode of the i'th trial.
+	var returnsA1 = mathlib.Matrix(numTrials, maxEps, 0) // Create a matrix to store the resulting returns. results(i,j) = the return on the j'th episode of the i'th trial.
 	var returnsA2 = mathlib.Matrix(numTrials, maxEps, 0) // Same as above, but for the second agent
 
 	fmt.Println("Starting trial 1 of ", numTrials+1) // "cout" means "console out", and is our print command. Separate objects to print with the << symbol. Here we are printing a string, followed by an integer, followed by std::endl (end line).
@@ -120,10 +120,10 @@ func main() {
 		go func(i int) {
 			// create objects
 			env := internal.NewGridworld(rng) // Create the environment, in this case a Gridworld
-			// a1 := internal.REINFORCE(stateDim, numActions, gamma) //  REINFORCE doesn't take N, since it will always use N = 1.
+			a1 := internal.NewREINFORCE(stateDim, numActions, gamma)
 			a2 := internal.NewTabularBBO(stateDim, numActions, gamma, N)
 			// get returns from history
-			// returnsA1[trial] = runAgentEnvironment(&a1, &env, maxEps, gamma, a1.updateBeforeNextAction(), rng).transpose()
+			returnsA1[i] = runAgentEnvironment(a1, env, maxEps, gamma, rng)
 			returnsA2[i] = runAgentEnvironment(a2, env, maxEps, gamma, rng)
 
 			wg.Done()
@@ -132,15 +132,17 @@ func main() {
 	wg.Wait()
 
 	// Convert returns into a vector of mean returns and the standard error (used for error bars)
-	// meanReturnsA1 := mathlib.Vector(maxEps)
-	// stderrReturnsA1 := mathlib.Vector(maxEps)
+	meanReturnsA1 := mathlib.Vector(maxEps, 0)
+	stderrReturnsA1 := mathlib.Vector(maxEps, 0)
 	meanReturnsA2 := mathlib.Vector(maxEps, 0)
 	stderrReturnsA2 := mathlib.Vector(maxEps, 0)
 
 	for epCount := 0; epCount < maxEps; epCount++ {
-		// meanReturnsA1[epCount] = returnsA1.col(epCount).mean()
-		// stderrReturnsA1[epCount] = mathlib.StdError(returnsA1.col(epCount))
-		returns := mathlib.Column(returnsA2, epCount)
+		returns := mathlib.Column(returnsA1, epCount)
+		meanReturnsA1[epCount] = mathlib.Mean(returns)
+		stderrReturnsA1[epCount] = mathlib.StdError(returns)
+
+		returns = mathlib.Column(returnsA2, epCount)
 		meanReturnsA2[epCount] = mathlib.Mean(returns)
 		stderrReturnsA2[epCount] = mathlib.StdError(returns)
 	}
@@ -151,12 +153,12 @@ func main() {
 		fmt.Println(err.Error() + "\n")
 	}
 	defer file.Close()
-	// file.WriteString("REINFORCE,BBO,TRS Error Bar,BBO Error Bar\n")
-	file.WriteString("BBO,BBO Error Bar\n")
+	file.WriteString("REINFORCE,BBO,TRS Error Bar,BBO Error Bar\n")
+	// file.WriteString("BBO,BBO Error Bar\n")
 	var line string
 	for epCount := 0; epCount < maxEps; epCount++ {
-		// line = strconv.FormatFloat(meanReturnsA1[epCount], 'g', -1, 64) + "," + strconv.FormatFloat(meanReturnsA2[epCount], 'g', -1, 64) + ',' + strconv.FormatFloat(stderrReturnsA1[epCount], 'g', -1, 64) + "," + strconv.FormatFloat(stderrReturnsA2[epCount], 'g', -1, 64)
-		line = strconv.FormatFloat(meanReturnsA2[epCount], 'g', -1, 64) + "," + strconv.FormatFloat(stderrReturnsA2[epCount], 'g', -1, 64)
+		line = strconv.FormatFloat(meanReturnsA1[epCount], 'g', -1, 64) + "," + strconv.FormatFloat(meanReturnsA2[epCount], 'g', -1, 64) + "," + strconv.FormatFloat(stderrReturnsA1[epCount], 'g', -1, 64) + "," + strconv.FormatFloat(stderrReturnsA2[epCount], 'g', -1, 64)
+		// line = strconv.FormatFloat(meanReturnsA2[epCount], 'g', -1, 64) + "," + strconv.FormatFloat(stderrReturnsA2[epCount], 'g', -1, 64)
 		file.WriteString(line + "\n")
 	}
 }
