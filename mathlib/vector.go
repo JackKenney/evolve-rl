@@ -16,6 +16,16 @@ func ZeroVec(vec *[]float64) {
 	}
 }
 
+// IsZero returns true if all the values
+func IsZero(vec *[]float64) bool {
+	for i := 0; i < len(*vec); i++ {
+		if (*vec)[i] != 0 {
+			return false
+		}
+	}
+	return true
+}
+
 // Matrix returns an initialized matrix of [rows, cols] by initialValue.
 func Matrix(rows int, cols int, initialValue float64) [][]float64 {
 	mat := make([][]float64, rows)
@@ -54,7 +64,7 @@ func FromOneHot(v []float64) int {
 			break
 		}
 	}
-	if state == len(v) {
+	if state == len(v) || state == -1 {
 		// If this happens, the s-vector was all zeros
 		panic("state vector was all zeros")
 	}

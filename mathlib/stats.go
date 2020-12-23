@@ -2,14 +2,19 @@ package mathlib
 
 import "math"
 
-// Mean returns the mean value in this slices of float64 values.
-func Mean(v []float64) float64 {
+// Sum returns the mean value in this slices of float64 values.
+func Sum(v []float64) float64 {
 	total := 0.0
 	for _, number := range v {
 		total = total + number
 	}
-	average := total / float64(len(v)) // len  function return array size
-	return average
+	return total
+}
+
+// Mean returns the mean value in this slices of float64 values.
+func Mean(v []float64) float64 {
+	total := Sum(v)
+	return total / float64(len(v))
 }
 
 // StdError calculate and return the standard error for this slice.
