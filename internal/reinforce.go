@@ -19,9 +19,9 @@ type REINFORCE struct {
 }
 
 // NewREINFORCE returns an initialized REINFORCE object.
-func NewREINFORCE(stateDim int, numActions int, gamma float64) Agent {
+func NewREINFORCE(stateDim int, numActions int, gamma float64, alpha float64) Agent {
 	agt := REINFORCE{}
-	agt.alpha = 0.001
+	agt.alpha = alpha
 
 	agt.ep = NewEpisodeTracker(1)
 	agt.numStates = stateDim

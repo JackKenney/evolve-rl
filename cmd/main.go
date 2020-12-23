@@ -81,26 +81,27 @@ func runAgentEnvironment(
 	return result
 }
 
-func main() {
-	// Create objects we will use
-	rng := mathlib.NewRandom(0)
-	numTrials := 1000
-	env := internal.NewGridworld(rng)
+type agentConstructor func() internal.Agent
+type environmentConstructor func() internal.Environment
 
-	// Get some values once so we don't have to keep looking them up (i.e., so we can type less later)
-	stateDim := env.GetStateDim()
-	numActions := env.GetNumActions()
+func runTrials(rng *mathlib.Random,
+	agentConstructor agentConstructor,
+	envConstructor environmentConstructor,
+	numTrials int,
+	fileName string,
+) {
+
+	// Create objects we will use
+	env := envConstructor()
+
+	// Get environment settings
 	maxEps := env.GetMaxEps()
 	gamma := env.GetGamma()
 
-	// How many episodes are run between update calls within TabularRandomSearch?
-	N := 10
-
 	// Create a matrix to store the resulting returns. results(i,j) = the return on the j'th episode of the i'th trial.
-	var returnsA1 = mathlib.Matrix(numTrials, maxEps, 0)
-	var returnsA2 = mathlib.Matrix(numTrials, maxEps, 0)
+	var returns = mathlib.Matrix(numTrials, maxEps, 0)
 
-	fmt.Println("Starting trial 1 of ", numTrials+1)
+	fmt.Println("Starting trial 1 of ", numTrials)
 
 	var wg sync.WaitGroup
 	// Loop over trials
@@ -111,13 +112,10 @@ func main() {
 		}
 		wg.Add(1)
 		go func(i int) {
-			// create objects
-			env := internal.NewGridworld(rng)
-			a1 := internal.NewREINFORCE(stateDim, numActions, gamma)
-			a2 := internal.NewTabularBBO(stateDim, numActions, gamma, N)
-			// get returns from history
-			returnsA1[i] = runAgentEnvironment(a1, env, maxEps, gamma, rng)
-			returnsA2[i] = runAgentEnvironment(a2, env, maxEps, gamma, rng)
+			env := envConstructor()
+			agt := agentConstructor()
+
+			returns[i] = runAgentEnvironment(agt, env, maxEps, gamma, rng)
 
 			wg.Done()
 		}(trial)
@@ -125,23 +123,17 @@ func main() {
 	wg.Wait()
 
 	// Convert returns into a vector of mean returns and the standard error (used for error bars)
-	meanReturnsA1 := mathlib.Vector(maxEps, 0)
-	stderrReturnsA1 := mathlib.Vector(maxEps, 0)
-	meanReturnsA2 := mathlib.Vector(maxEps, 0)
-	stderrReturnsA2 := mathlib.Vector(maxEps, 0)
+	meanReturns := mathlib.Vector(maxEps, 0)
+	stderrReturns := mathlib.Vector(maxEps, 0)
 
 	for epCount := 0; epCount < maxEps; epCount++ {
-		returns := mathlib.Column(returnsA1, epCount)
-		meanReturnsA1[epCount] = mathlib.Mean(returns)
-		stderrReturnsA1[epCount] = mathlib.StdError(returns)
-
-		returns = mathlib.Column(returnsA2, epCount)
-		meanReturnsA2[epCount] = mathlib.Mean(returns)
-		stderrReturnsA2[epCount] = mathlib.StdError(returns)
+		returns := mathlib.Column(returns, epCount)
+		meanReturns[epCount] = mathlib.Mean(returns)
+		stderrReturns[epCount] = mathlib.StdError(returns)
 	}
 
 	// Print the results to a file
-	file, err := os.Create("out.csv")
+	file, err := os.Create(fileName + "_out.csv")
 	if err != nil {
 		fmt.Println(err.Error() + "\n")
 	}
@@ -149,7 +141,53 @@ func main() {
 	file.WriteString("REINFORCE,BBO,REINFORCE Error Bar,BBO Error Bar\n")
 	var line string
 	for epCount := 0; epCount < maxEps; epCount++ {
-		line = strconv.FormatFloat(meanReturnsA1[epCount], 'g', -1, 64) + "," + strconv.FormatFloat(meanReturnsA2[epCount], 'g', -1, 64) + "," + strconv.FormatFloat(stderrReturnsA1[epCount], 'g', -1, 64) + "," + strconv.FormatFloat(stderrReturnsA2[epCount], 'g', -1, 64)
+		line = strconv.FormatFloat(meanReturns[epCount], 'g', -1, 64) + "," + strconv.FormatFloat(stderrReturns[epCount], 'g', -1, 64)
 		file.WriteString(line + "\n")
 	}
+}
+
+func main() {
+	var fileName string
+	fileName = "sarsa"
+	// fileName = "reinforce"
+	// fileName = "bbo"
+	// fileName = "q-learning"
+
+	numTrials := 1000
+
+	// Hyperparameters
+	bboN := 10
+	alphaSarsa := 0.001
+	alphaReinforce := 0.001
+	optimisticValue := 10.0
+
+	rng := mathlib.NewRandom(0)
+	env := internal.NewGridworld(rng)
+
+	// Get some values once so we don't have to keep looking them up (i.e., so we can type less later)
+	stateDim := env.GetStateDim()
+	numActions := env.GetNumActions()
+	gamma := env.GetGamma()
+
+	// Constructors used by parallelized trials
+	envConstructor := func() internal.Environment {
+		return internal.NewGridworld(rng)
+	}
+
+	agtConstructor := func() internal.Agent {
+		if fileName == "sarsa" {
+			return internal.NewSarsa(stateDim, numActions, gamma, alphaSarsa, optimisticValue)
+		} else if fileName == "q-learning" {
+			return internal.NewTabularBBO(stateDim, numActions, gamma, bboN)
+		} else if fileName == "reinforce" {
+			return internal.NewREINFORCE(stateDim, numActions, gamma, alphaReinforce)
+		} else if fileName == "bbo" {
+			return internal.NewTabularBBO(stateDim, numActions, gamma, bboN)
+		} else {
+			panic("No algorithm selected")
+		}
+	}
+
+	// Run parallel trials
+	runTrials(rng, agtConstructor, envConstructor, numTrials, fileName)
 }

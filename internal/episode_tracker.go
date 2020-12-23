@@ -13,11 +13,9 @@ type EpisodeTracker struct {
 // NewEpisodeTracker returns new episodes
 func NewEpisodeTracker(N int) *EpisodeTracker {
 	ep := EpisodeTracker{}
-	ep.N = N
-	ep.t = 0
-	ep.epCount = 0
-
 	ep.Wipe()
+	ep.N = N
+
 	return &ep
 }
 
