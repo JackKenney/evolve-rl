@@ -11,13 +11,12 @@ import (
 )
 
 func runEpisode(
-	agt internal.Agent, // The agent to run. The * here means that this is a pointer to an agent object. "pointer" means "memory location". So, this function takes as input the location of an object in memory, and that object satisfies the spceifications of the "Agent" class.
-	env internal.Environment, // The environment to run on (pointer)
-	gamma float64, // The discount factor to use
-	rng *mathlib.Random, // Random number rng to use
+	agt internal.Agent,
+	env internal.Environment,
+	gamma float64,
+	rng *mathlib.Random,
 ) float64 {
-
-	// Tell the agent and environment that we're starting a new episode. For the first episode, this may be redundant if the agent and environment were just created
+	// Prepare objects
 	env.NewEpisode(rng)
 	agt.NewEpisode()
 
@@ -27,32 +26,32 @@ func runEpisode(
 	var curState, newState []float64
 
 	// Prepare for the new episode
-	result = 0                               // We will store the return here
-	curGamma = 1                             // We will store gamma^t here
-	curState = env.GetState()                // Get the initial state
-	curAction = agt.GetAction(curState, rng) // Get the initial action
+	result = 0
+	curGamma = 1
+	curState = env.GetState()
+	curAction = agt.GetAction(curState, rng)
 
 	// Loop over time
 	for t := 0; true; t++ {
-		reward = env.Transition(curAction, rng) // Update the state of the environment and get the reward
-		result += curGamma * reward             // Update the return for this episode
-		curGamma *= gamma                       // Decay curGamma
+		reward = env.Transition(curAction, rng)
+		result += curGamma * reward
+		curGamma *= gamma
 
 		// Check if in the terminal absorbing state
 		if env.InTAS() {
-			agt.LastUpdate(curState, curAction, reward, rng) // In the terminal absorbing state, so do a special temrinal update
-			break                                            // Break out of the loop over time.
+			agt.LastUpdate(curState, curAction, reward, rng)
+			break
 		}
 
 		newState = env.GetState()
 
 		// Check if we should update before computing the next action
 		if agt.UpdateBeforeNextAction() {
-			agt.UpdateSARS(curState, curAction, reward, newState, rng) // Update before getting the new action
-			newAction = agt.GetAction(newState, rng)                   // Get the new action
+			agt.UpdateSARS(curState, curAction, reward, newState, rng)
+			newAction = agt.GetAction(newState, rng)
 		} else {
-			newAction = agt.GetAction(newState, rng)                               // Get the new action before updating the agent
-			agt.UpdateSARSA(curState, curAction, reward, newState, newAction, rng) // Update the agent
+			newAction = agt.GetAction(newState, rng)
+			agt.UpdateSARSA(curState, curAction, reward, newState, newAction, rng)
 		}
 
 		// Prepare for the next iteration of the t-loop, where "new" variables will be the "cur" variables.
@@ -62,11 +61,11 @@ func runEpisode(
 	return result
 }
 func runAgentEnvironment(
-	agt internal.Agent, // The agent to run. The * here means that this is a pointer to an agent object. "pointer" means "memory location". So, this function takes as input the location of an object in memory, and that object satisfies the spceifications of the "Agent" class.
-	env internal.Environment, // The environment to run on (pointer)
-	maxEps int, // The number of episodes to run
-	gamma float64, // The discount factor to use
-	rng *mathlib.Random, // Random number rng to use.
+	agt internal.Agent,
+	env internal.Environment,
+	maxEps int,
+	gamma float64,
+	rng *mathlib.Random,
 ) []float64 {
 
 	// Wipe the agent to start a new trial
@@ -85,8 +84,8 @@ func runAgentEnvironment(
 func main() {
 	// Create objects we will use
 	rng := mathlib.NewRandom(0)
-	numTrials := 1000                 // Specify the number of trials to run and get the number of episodes per tiral.
-	env := internal.NewGridworld(rng) // Create the environment, in this case a Gridworld
+	numTrials := 1000
+	env := internal.NewGridworld(rng)
 
 	// Get some values once so we don't have to keep looking them up (i.e., so we can type less later)
 	stateDim := env.GetStateDim()
@@ -94,16 +93,14 @@ func main() {
 	maxEps := env.GetMaxEps()
 	gamma := env.GetGamma()
 
-	/////
-	// If you wnat to use the manual agent, uncomment the line below, and comment out the line defining the agent to be a TabularRandomSearch object.
-	/////
-	//Manual a1;					// Create the agent
-	N := 10 // How many episodes are run between update calls within TabularRandomSearch?
+	// How many episodes are run between update calls within TabularRandomSearch?
+	N := 10
 
-	var returnsA1 = mathlib.Matrix(numTrials, maxEps, 0) // Create a matrix to store the resulting returns. results(i,j) = the return on the j'th episode of the i'th trial.
-	var returnsA2 = mathlib.Matrix(numTrials, maxEps, 0) // Same as above, but for the second agent
+	// Create a matrix to store the resulting returns. results(i,j) = the return on the j'th episode of the i'th trial.
+	var returnsA1 = mathlib.Matrix(numTrials, maxEps, 0)
+	var returnsA2 = mathlib.Matrix(numTrials, maxEps, 0)
 
-	fmt.Println("Starting trial 1 of ", numTrials+1) // "cout" means "console out", and is our print command. Separate objects to print with the << symbol. Here we are printing a string, followed by an integer, followed by std::endl (end line).
+	fmt.Println("Starting trial 1 of ", numTrials+1)
 
 	var wg sync.WaitGroup
 	// Loop over trials
@@ -112,14 +109,10 @@ func main() {
 		if (trial+1)%1 == 0 {
 			fmt.Println("Starting trial ", trial+1, " of ", numTrials)
 		}
-		// Run the agent on the environment for this trial, and store the result in the trial'th row of returns.
-		// The & before a1 and env indicates that we are passing pointers to a1, a2, and env. This is because runAgentEnvironment
-		// won't know the type of the agent and environment, only that they meet the specifications of Agent.hpp and Environment.hpp.
-		// So, on their end, these inputs are pointers to objects of unknown exact type, but which meet the Agent/Environment specifications.
 		wg.Add(1)
 		go func(i int) {
 			// create objects
-			env := internal.NewGridworld(rng) // Create the environment, in this case a Gridworld
+			env := internal.NewGridworld(rng)
 			a1 := internal.NewREINFORCE(stateDim, numActions, gamma)
 			a2 := internal.NewTabularBBO(stateDim, numActions, gamma, N)
 			// get returns from history
@@ -148,17 +141,15 @@ func main() {
 	}
 
 	// Print the results to a file
-	file, err := os.Create("out.csv") // Create an "output file stream". This will actually create the file, but it will be empty
+	file, err := os.Create("out.csv")
 	if err != nil {
 		fmt.Println(err.Error() + "\n")
 	}
 	defer file.Close()
-	file.WriteString("REINFORCE,BBO,TRS Error Bar,BBO Error Bar\n")
-	// file.WriteString("BBO,BBO Error Bar\n")
+	file.WriteString("REINFORCE,BBO,REINFORCE Error Bar,BBO Error Bar\n")
 	var line string
 	for epCount := 0; epCount < maxEps; epCount++ {
 		line = strconv.FormatFloat(meanReturnsA1[epCount], 'g', -1, 64) + "," + strconv.FormatFloat(meanReturnsA2[epCount], 'g', -1, 64) + "," + strconv.FormatFloat(stderrReturnsA1[epCount], 'g', -1, 64) + "," + strconv.FormatFloat(stderrReturnsA2[epCount], 'g', -1, 64)
-		// line = strconv.FormatFloat(meanReturnsA2[epCount], 'g', -1, 64) + "," + strconv.FormatFloat(stderrReturnsA2[epCount], 'g', -1, 64)
 		file.WriteString(line + "\n")
 	}
 }

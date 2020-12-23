@@ -134,7 +134,6 @@ func (agt *REINFORCE) episodicUpdate(rng *mathlib.Random) {
 			}
 		}
 	}
-	// TODO: Write code to compute the REINFORCE (without baseline) unbiased estimator of the policy gradient, and store it in gradientEstimate
 	// Note: Drop the gamma^t term that is usually dropped in actual implementations!
 
 	// Perform the actual update.

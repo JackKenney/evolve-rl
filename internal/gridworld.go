@@ -89,22 +89,24 @@ func (env *Gridworld) Transition(a int, r *mathlib.Random) float64 {
 	} else if effectiveAction == 3 {
 		xPrime-- // Left
 	}
-	// Note that a == -1 is possible. We use this to implement the "stay" behavior. The above statement is NOT "else", it is "else if" to handle this -1 case.
 
 	// If the new position is valid, then update to it!
-	if (xPrime >= 0) && (yPrime >= 0) && (xPrime < 5) && (yPrime < 5) && // Inside the grid
-		((xPrime != 2) || ((yPrime != 2) && (yPrime != 3))) { // Not in an obstacle
+	if (xPrime >= 0) && (yPrime >= 0) && (xPrime < 5) && (yPrime < 5) &&
+		((xPrime != 2) || ((yPrime != 2) && (yPrime != 3))) {
 		env.x = xPrime
 		env.y = yPrime
 	}
 
 	// Compute the resulting reward
 	if (env.x == 2) && (env.y == 4) {
-		return -10 // The agent is in the water state
+		// The agent is in the "water" state
+		return -10
 	} else if (env.x == 4) && (env.y == 4) {
-		return 10 // The agent is in the bottom-right "goal" state.
+		// The agent is in the bottom-right "goal" state.
+		return 10
 	} else {
-		return 0 // The agent isn't in the water or the "goal" state, so the reward is zero
+		// The agent isn't in the "water" or the "goal" state, so the reward is zero
+		return 0
 	}
 }
 
@@ -114,19 +116,20 @@ func (env *Gridworld) GetState() []float64 {
 	if env.x == 4 && env.y == 4 {
 		env.tas = true
 	}
-	// Create the object we will return, and initialize to the zero-vector, of length 23.
-	result := make([]float64, 23) // make an int slice of length 5
-	if !env.tas {                 // If we are in the terminal absorbing state, this shouldn't be called. Just in case, let's use the all-zero vector to denote the TAS
-		state := env.y*5 + env.x // map the x,y coordinates to a number in [0,24]
 
-		// Cut the two obstacles. You can work out with pen and paper that this should do what we want. Or, you could run the "manual" agent and have the agent walk around the environment to confirm the desired behavior.
-		if state == 12 { // This is the upper obstacle. Note that states start at 0 here, unlike the course notes where they start at 1
+	// Create the object we will return, and initialize to the zero-vector, of length 23.
+	result := make([]float64, 23)
+	if !env.tas {
+		state := env.y*5 + env.x
+
+		// Do not enter obstacles
+		if state == 12 {
 			panic("Agent inside of upper obstacle")
 		}
 		if state > 12 {
 			state--
 		}
-		if state == 16 { // This is the lower obstacle (after being shifted left one)
+		if state == 16 {
 			panic("Agent inside of lower obstacle")
 		}
 		if state > 16 {
