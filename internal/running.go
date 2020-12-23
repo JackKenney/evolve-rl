@@ -16,6 +16,7 @@ func RunEpisode(
 	gamma float64,
 	rng *mathlib.Random,
 ) float64 {
+
 	// Prepare objects
 	env.NewEpisode(rng)
 	agt.NewEpisode()
