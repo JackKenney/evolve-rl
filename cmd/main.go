@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os/exec"
 	"sync"
 
@@ -31,14 +30,14 @@ func runner(fileName string) {
 		return internal.NewGridworld(rng)
 	}
 	agtConstructor := func() internal.Agent {
-		if fileName == "sarsa" {
+		if fileName == "bbo" {
+			return internal.NewTabularBBO(stateDim, numActions, gamma, bboN)
+		} else if fileName == "sarsa" {
 			return internal.NewSarsa(stateDim, numActions, gamma, alphaSarsa, optimisticValue)
 			// } else if fileName == "q-learning" {
 			// 	return internal.NewTabularBBO(stateDim, numActions, gamma, bboN)
 		} else if fileName == "reinforce" {
 			return internal.NewREINFORCE(stateDim, numActions, gamma, alphaReinforce)
-		} else if fileName == "bbo" {
-			return internal.NewTabularBBO(stateDim, numActions, gamma, bboN)
 		} else {
 			panic("No algorithm selected")
 		}
@@ -62,19 +61,7 @@ func main() {
 	}
 	wg.Wait()
 
-	// Make plots
-	for _, fileName := range algorithms {
-		wg.Add(1)
-		go func(f string) {
-			cmd := exec.Command("matlab", "-batch", "'plotResults(\""+f+"_out"+"\")'")
-			err := cmd.Run()
-
-			if err != nil {
-				fmt.Printf("%s\n", err)
-			}
-
-			wg.Done()
-		}(fileName)
-	}
-	wg.Wait()
+	// Plot results
+	cmd := exec.Command("sh", "plotResults.sh")
+	cmd.Run()
 }

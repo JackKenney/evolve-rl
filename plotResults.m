@@ -1,5 +1,5 @@
 function plotResults(fileName)
-    data = readtable("data/"+fileName+".csv");
+    data = readtable("data/"+fileName);
 
     f = figure;
     a = axes(f);

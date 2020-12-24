@@ -139,7 +139,7 @@ func RunTrials(rng *mathlib.Random,
 	}
 
 	// Print the results to a file
-	file, err := os.Create(fileName + "_out.csv")
+	file, err := os.Create("data/" + fileName + "_out.csv")
 	if err != nil {
 		fmt.Println(err.Error() + "\n")
 	}
