@@ -58,6 +58,9 @@ func RunEpisode(
 		// Prepare for the next iteration of the t-loop, where "new" variables will be the "cur" variables.
 		curAction = newAction
 		curState = newState
+		if t > 10 {
+			break
+		}
 	}
 	return result
 }
@@ -110,8 +113,7 @@ func RunTrials(rng *mathlib.Random,
 	var wg sync.WaitGroup
 	// Loop over trials
 	for trial := 0; trial < numTrials; trial++ {
-		// % means "mod"
-		if (trial+1)%1 == 0 {
+		if (trial+1)%10 == 0 {
 			fmt.Println("Starting trial ", trial+1, " of ", numTrials)
 		}
 		wg.Add(1)
@@ -142,7 +144,7 @@ func RunTrials(rng *mathlib.Random,
 		fmt.Println(err.Error() + "\n")
 	}
 	defer file.Close()
-	file.WriteString("REINFORCE,BBO,REINFORCE Error Bar,BBO Error Bar\n")
+	file.WriteString("Returns, Error\n")
 	var line string
 	for epCount := 0; epCount < numEps; epCount++ {
 		line = strconv.FormatFloat(meanReturns[epCount], 'g', -1, 64) + "," + strconv.FormatFloat(stderrReturns[epCount], 'g', -1, 64)

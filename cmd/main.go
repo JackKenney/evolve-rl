@@ -1,13 +1,16 @@
 package main
 
 import (
+	"fmt"
+	"os/exec"
+	"sync"
+
 	"github.com/jackkenney/evolve-rl/internal"
 	"github.com/jackkenney/evolve-rl/mathlib"
 )
 
 func runner(fileName string) {
-
-	numTrials := 1000
+	numTrials := 1
 
 	// Hyperparameters
 	bboN := 10
@@ -27,12 +30,11 @@ func runner(fileName string) {
 	envConstructor := func() internal.Environment {
 		return internal.NewGridworld(rng)
 	}
-
 	agtConstructor := func() internal.Agent {
 		if fileName == "sarsa" {
 			return internal.NewSarsa(stateDim, numActions, gamma, alphaSarsa, optimisticValue)
-		} else if fileName == "q-learning" {
-			return internal.NewTabularBBO(stateDim, numActions, gamma, bboN)
+			// } else if fileName == "q-learning" {
+			// 	return internal.NewTabularBBO(stateDim, numActions, gamma, bboN)
 		} else if fileName == "reinforce" {
 			return internal.NewREINFORCE(stateDim, numActions, gamma, alphaReinforce)
 		} else if fileName == "bbo" {
@@ -47,8 +49,32 @@ func runner(fileName string) {
 }
 
 func main() {
-	algorithms := []string{"sarsa", "reinforce", "bbo", "q-learning"}
+	algorithms := []string{"sarsa", "reinforce", "bbo"} //, "q-learning"}
+
+	// Run algorithms in parallel
+	var wg sync.WaitGroup
 	for _, fileName := range algorithms {
-		runner(fileName)
+		wg.Add(1)
+		go func(f string) {
+			runner(f)
+			wg.Done()
+		}(fileName)
 	}
+	wg.Wait()
+
+	// Make plots
+	for _, fileName := range algorithms {
+		wg.Add(1)
+		go func(f string) {
+			cmd := exec.Command("matlab", "-batch", "'plotResults(\""+f+"_out"+"\")'")
+			err := cmd.Run()
+
+			if err != nil {
+				fmt.Printf("%s\n", err)
+			}
+
+			wg.Done()
+		}(fileName)
+	}
+	wg.Wait()
 }

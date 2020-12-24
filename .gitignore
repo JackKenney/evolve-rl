@@ -13,6 +13,9 @@ bin/*
 # Data files
 *.csv
 
+# Plot files
+*.png
+
 # Test binary, built with `go test -c`
 *.test
 

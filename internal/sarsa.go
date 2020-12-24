@@ -47,7 +47,9 @@ func (agt *Sarsa) GetAction(s []float64, rng *mathlib.Random) int {
 	// Convert the one-hot state into an integer from 0 - (numStates-1)
 	state := mathlib.FromOneHot(s)
 	// Get the action probabilities from theta, using softmax action selection.
-	actionProbabilities := agt.theta[state]
+	actionProbabilities := make([]float64, len(agt.theta[state]))
+	copy(agt.theta[state], actionProbabilities)
+
 	denominator := 0.0
 	for a := 0; a < len(actionProbabilities); a++ {
 		actionProbabilities[a] = math.Exp(actionProbabilities[a])
@@ -69,11 +71,13 @@ func (agt *Sarsa) GetAction(s []float64, rng *mathlib.Random) int {
 }
 
 // NewEpisode tells the agent that it is at the start of a new episode.
-func (agt *Sarsa) NewEpisode() {}
+func (agt *Sarsa) NewEpisode() {
+	// Nothing to do at episode threshold for sarsa
+}
 
 // Reset the agent entirely - to a blank slate prior to learning
 func (agt *Sarsa) Reset(rng *mathlib.Random) {
-	mathlib.ZeroMat(&agt.theta)
+	mathlib.ResetMat(&agt.theta, agt.optimisticValue)
 }
 
 // UpdateSARS is unimplemented for this class.
@@ -86,11 +90,13 @@ func (agt *Sarsa) UpdateSARS(s []float64, a int, r float64, sPrime []float64, rn
 func (agt *Sarsa) UpdateSARSA(s []float64, a int, r float64, sPrime []float64, aPrime int, rng *mathlib.Random) {
 	sIdx := mathlib.FromOneHot(s)
 	sPrimeIdx := mathlib.FromOneHot(sPrime)
-	agt.theta[sIdx][a] += agt.alpha * (r + agt.gamma*agt.theta[sPrimeIdx][aPrime] - agt.theta[sIdx][a])
+	tdError := r + agt.gamma*agt.theta[sPrimeIdx][aPrime] - agt.theta[sIdx][a]
+	agt.theta[sIdx][a] += agt.alpha * tdError
 }
 
 // LastUpdate lets the agent update/learn when sPrime would be the terminal absorbing state.
 func (agt *Sarsa) LastUpdate(s []float64, a int, r float64, rng *mathlib.Random) {
 	state := mathlib.FromOneHot(s)
-	agt.theta[state][a] += agt.alpha * (r - agt.theta[state][a])
+	tdError := r - agt.theta[state][a]
+	agt.theta[state][a] += agt.alpha * tdError
 }

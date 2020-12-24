@@ -1,20 +1,18 @@
-data = readtable("out.csv");
+function plotResults(fileName)
+    data = readtable("data/"+fileName+".csv");
 
-f = figure;
-a = axes(f);
-t = 0:height(data.BBO)-1;
-errorbar(a, t, data.BBO, data.BBOErrorBar)
-hold on
-errorbar(a, t, data.REINFORCE, data.REINFORCEErrorBar)
-hold off
+    f = figure;
+    a = axes(f);
+    t = 0:height(data.Returns)-1;
+    errorbar(a, t, data.Returns, data.Error)
+    
+    prefix = extractBetween(fileName, "", "_out");
+    title("Obstructed Gridworld: " + prefix)
+    
+    xlabel("Episode")
+    ylabel("Average Return")
+    legend(""+sum(data.Returns)/1000, ...
+        "Location","BEST")
 
-title("Obstructed Gridworld")
-xlabel("Episode")
-ylabel("Average Return")
-legend([ ...
-    "BBO    "+sum(data.BBO)/1000, ...
-    "REINFORCE "+sum(data.REINFORCE)/1000 ...
-    ], ...
-    "Location","BEST")
-
-exportgraphics(f, "plot.png");
+    exportgraphics(f, "plots/"+prefix+"_plot.png");
+end

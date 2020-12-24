@@ -75,7 +75,7 @@ func (agt *REINFORCE) NewEpisode() {}
 
 // Reset the agent entirely - to a blank slate prior to learning
 func (agt *REINFORCE) Reset(rng *mathlib.Random) {
-	mathlib.ZeroMat(&agt.theta)
+	mathlib.ResetMat(&agt.theta, 0.0)
 	agt.ep.Wipe()
 }
 

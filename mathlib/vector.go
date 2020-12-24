@@ -47,11 +47,11 @@ func Column(mat [][]float64, k int) []float64 {
 	return vec
 }
 
-// ZeroMat zeros out the values in matrix mat
-func ZeroMat(mat *[][]float64) {
+// ResetMat zeros out the values in matrix mat
+func ResetMat(mat *[][]float64, val float64) {
 	for i := 0; i < len(*mat); i++ {
 		for j := 0; j < len((*mat)[i]); j++ {
-			(*mat)[i][j] = 0
+			(*mat)[i][j] = val
 		}
 	}
 }
